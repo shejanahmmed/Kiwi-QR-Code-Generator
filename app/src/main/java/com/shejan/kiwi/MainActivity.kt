@@ -8,6 +8,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -62,13 +64,17 @@ fun HomeScreen() {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = AmoledBlack
+        containerColor = AmoledBlack,
+        bottomBar = {
+            FloatingNavBar()
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(horizontal = 24.dp)
+                .padding(top = 24.dp, bottom = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
@@ -172,14 +178,49 @@ fun HomeScreen() {
             }
 
             Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+}
 
-            // Professional Footer
-            Text(
-                text = "Minimal • Modern • Professional",
-                color = Color.Gray.copy(alpha = 0.3f),
-                fontSize = 12.sp,
-                letterSpacing = 1.sp
-            )
+@Composable
+fun FloatingNavBar() {
+    var selectedItem by remember { mutableIntStateOf(0) }
+    val items = listOf(
+        R.drawable.ic_home,
+        R.drawable.ic_scanner,
+        R.drawable.ic_history,
+        R.drawable.ic_settings
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 24.dp, start = 24.dp, end = 24.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+                .clip(RoundedCornerShape(22.dp))
+                .background(DarkGrey)
+                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(22.dp)),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            items.forEachIndexed { index, iconRes ->
+                IconButton(
+                    onClick = { selectedItem = index },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = null,
+                        tint = if (selectedItem == index) KiwiGreen else Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
         }
     }
 }
