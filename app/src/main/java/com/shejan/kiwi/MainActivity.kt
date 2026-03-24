@@ -1,5 +1,6 @@
 package com.shejan.kiwi
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.widget.Toast
@@ -13,6 +14,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Share
@@ -130,6 +132,37 @@ fun HomeScreen() {
                 onValueChange = { textInput = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Paste link here...", color = Color.Gray) },
+                trailingIcon = {
+                    if (textInput.isEmpty()) {
+                        TextButton(
+                            modifier = Modifier.padding(end = 8.dp),
+                            onClick = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                val item = clipboard.primaryClip?.getItemAt(0)
+                                val pasteData = item?.text
+                                if (pasteData != null) {
+                                    textInput = pasteData.toString()
+                                } else {
+                                    Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = KiwiGreen)
+                        ) {
+                            Text("Paste", fontWeight = FontWeight.Bold)
+                        }
+                    } else {
+                        IconButton(
+                            onClick = { textInput = "" },
+                            modifier = Modifier.padding(end = 4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear",
+                                tint = KiwiGreen
+                            )
+                        }
+                    }
+                },
                 singleLine = true,
                 shape = RoundedCornerShape(20.dp),
                 colors = OutlinedTextFieldDefaults.colors(
