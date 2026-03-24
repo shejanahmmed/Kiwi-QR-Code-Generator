@@ -19,11 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import com.shejan.kiwi.logic.QrGenerator
+import com.shejan.kiwi.util.FileHelper
 import com.shejan.kiwi.ui.theme.AmoledBlack
 import com.shejan.kiwi.ui.theme.DarkGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
@@ -133,6 +132,7 @@ fun HomeScreen() {
             )
 
             // Action Buttons
+            val context = LocalContext.current
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -143,7 +143,14 @@ fun HomeScreen() {
                     modifier = Modifier.weight(1f),
                     enabled = qrBitmap != null
                 ) {
-                    // TODO: Implement Download
+                    qrBitmap?.let {
+                        val success = FileHelper.saveToGallery(context, it, "Kiwi_QR_${System.currentTimeMillis()}")
+                        if (success) {
+                            Toast.makeText(context, "Saved to Gallery", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
                 ActionButton(
                     icon = Icons.Default.Share,
@@ -151,7 +158,9 @@ fun HomeScreen() {
                     modifier = Modifier.weight(1f),
                     enabled = qrBitmap != null
                 ) {
-                    // TODO: Implement Share
+                    qrBitmap?.let {
+                        FileHelper.shareImage(context, it, "Kiwi_QR_Share")
+                    }
                 }
             }
 
