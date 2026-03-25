@@ -23,6 +23,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.shejan.kiwi.ui.HomeScreen
 import com.shejan.kiwi.ui.SettingsScreen
+import com.shejan.kiwi.ui.HistoryScreen
 import com.shejan.kiwi.ui.theme.AmoledBlack
 import com.shejan.kiwi.ui.theme.DarkGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
@@ -54,9 +55,9 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("home") { HomeScreen() }
                         composable("settings") { SettingsScreen() }
-                        // Future routes: scanner, history
+                        composable("history") { HistoryScreen() }
+                        // Future routes: scanner
                         composable("scanner") { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Scanner Coming Soon", color = Color.White) } }
-                        composable("history") { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("History Coming Soon", color = Color.White) } }
                     }
                 }
             }

@@ -29,9 +29,10 @@ import com.shejan.kiwi.ui.theme.AshGrey
 import com.shejan.kiwi.ui.theme.DarkGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
 import com.shejan.kiwi.util.FileHelper
+import com.shejan.kiwi.ui.HistoryViewModel
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     var textInput by remember { mutableStateOf("") }
     var qrBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
@@ -42,6 +43,13 @@ fun HomeScreen() {
             QrGenerator.generate(textInput, 512)
         } else {
             null
+        }
+    }
+
+    // Save to history when qrBitmap is generated and textInput is not empty
+    LaunchedEffect(qrBitmap) {
+        if (qrBitmap != null && textInput.isNotEmpty()) {
+            viewModel.saveUrl(textInput)
         }
     }
 
