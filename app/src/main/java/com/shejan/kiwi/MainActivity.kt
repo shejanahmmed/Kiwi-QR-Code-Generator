@@ -1,39 +1,30 @@
 package com.shejan.kiwi
 
-import android.content.Context
-import android.graphics.Bitmap
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.shejan.kiwi.logic.QrGenerator
-import com.shejan.kiwi.util.FileHelper
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.shejan.kiwi.ui.HomeScreen
+import com.shejan.kiwi.ui.SettingsScreen
 import com.shejan.kiwi.ui.theme.AmoledBlack
 import com.shejan.kiwi.ui.theme.DarkGrey
-import com.shejan.kiwi.ui.theme.AshGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
 import com.shejan.kiwi.ui.theme.KiwiTheme
 
@@ -43,186 +34,41 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KiwiTheme {
-                HomeScreen()
+                val navController = rememberNavController()
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = AmoledBlack,
+                    bottomBar = {
+                        FloatingNavBar(navController)
+                    }
+                ) { innerPadding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = "home",
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        composable("home") { HomeScreen() }
+                        composable("settings") { SettingsScreen() }
+                        // Future routes: scanner, history
+                        composable("scanner") { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Scanner Coming Soon", color = Color.White) } }
+                        composable("history") { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("History Coming Soon", color = Color.White) } }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun HomeScreen() {
-    var textInput by remember { mutableStateOf("") }
-    var qrBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val context = LocalContext.current
+fun FloatingNavBar(navController: NavController) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-    // Generate QR when text changes
-    LaunchedEffect(textInput) {
-        qrBitmap = if (textInput.isNotEmpty()) {
-            QrGenerator.generate(textInput, 512)
-        } else {
-            null
-        }
-    }
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = AmoledBlack,
-        bottomBar = {
-            FloatingNavBar()
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
-                .padding(top = 24.dp, bottom = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            // Header
-            Text(
-                text = "Kiwi",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = KiwiGreen,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-
-            // QR Code Display Area
-            Box(
-                modifier = Modifier
-                    .size(280.dp)
-                    .clip(RoundedCornerShape(32.dp))
-                    .background(DarkGrey)
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (qrBitmap == null) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.QrCode,
-                            contentDescription = null,
-                            tint = Color.Gray.copy(alpha = 0.3f),
-                            modifier = Modifier.size(80.dp)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "Enter text to generate QR",
-                            color = Color.Gray.copy(alpha = 0.5f),
-                            fontSize = 14.sp
-                        )
-                    }
-                } else {
-                    qrBitmap?.let {
-                        Image(
-                            bitmap = it.asImageBitmap(),
-                            contentDescription = "Generated QR Code",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(16.dp))
-                        )
-                    }
-                }
-            }
-
-            // Input Field
-            OutlinedTextField(
-                value = textInput,
-                onValueChange = { textInput = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Paste link here...", color = Color.Gray) },
-                trailingIcon = {
-                    if (textInput.isEmpty()) {
-                        TextButton(
-                            modifier = Modifier.padding(end = 8.dp),
-                            onClick = {
-                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                val item = clipboard.primaryClip?.getItemAt(0)
-                                val pasteData = item?.text
-                                if (pasteData != null) {
-                                    textInput = pasteData.toString()
-                                } else {
-                                    Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            colors = ButtonDefaults.textButtonColors(contentColor = KiwiGreen)
-                        ) {
-                            Text("Paste", fontWeight = FontWeight.Bold)
-                        }
-                    } else {
-                        IconButton(
-                            onClick = { textInput = "" },
-                            modifier = Modifier.padding(end = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Clear",
-                                tint = KiwiGreen
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(20.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = KiwiGreen,
-                    unfocusedBorderColor = DarkGrey,
-                    focusedContainerColor = DarkGrey,
-                    unfocusedContainerColor = DarkGrey,
-                    cursorColor = KiwiGreen,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                )
-            )
-
-            // Action Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                ActionButton(
-                    icon = Icons.Default.Download,
-                    label = "Save",
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if (qrBitmap != null) {
-                        val success = FileHelper.saveToGallery(context, qrBitmap!!, "Kiwi_QR_${System.currentTimeMillis()}")
-                        if (success) {
-                            Toast.makeText(context, "Saved to Gallery", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
-                        }
-                    } else {
-                        Toast.makeText(context, "Please enter a link first", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                ActionButton(
-                    icon = Icons.Default.Share,
-                    label = "Share",
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if (qrBitmap != null) {
-                        FileHelper.shareImage(context, qrBitmap!!, "Kiwi_QR_Share")
-                    } else {
-                        Toast.makeText(context, "Please enter a link first", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-        }
-    }
-}
-
-@Composable
-fun FloatingNavBar() {
-    var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf(
-        R.drawable.ic_home,
-        R.drawable.ic_scanner,
-        R.drawable.ic_history,
-        R.drawable.ic_settings
+        NavigationItem("home", R.drawable.ic_home),
+        NavigationItem("scanner", R.drawable.ic_scanner),
+        NavigationItem("history", R.drawable.ic_history),
+        NavigationItem("settings", R.drawable.ic_settings)
     )
 
     Box(
@@ -241,15 +87,31 @@ fun FloatingNavBar() {
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            items.forEachIndexed { index, iconRes ->
+            items.forEach { item ->
                 IconButton(
-                    onClick = { selectedItem = index },
+                    onClick = {
+                        if (currentRoute != item.route) {
+                            navController.navigate(item.route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
+                                // on the back stack as users select items
+                                popUpTo("home") {
+                                    saveState = true
+                                }
+                                // Avoid multiple copies of the same destination when
+                                // reselecting the same item
+                                launchSingleTop = true
+                                // Restore state when reselecting a previously selected item
+                                restoreState = true
+                            }
+                        }
+                    },
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = iconRes),
-                        contentDescription = null,
-                        tint = if (selectedItem == index) KiwiGreen else Color.White,
+                        painter = painterResource(id = item.iconRes),
+                        contentDescription = item.route,
+                        tint = if (currentRoute == item.route) KiwiGreen else Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -258,28 +120,4 @@ fun FloatingNavBar() {
     }
 }
 
-@Composable
-fun ActionButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier.height(60.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = AshGrey,
-            contentColor = Color.White,
-            disabledContainerColor = AshGrey.copy(alpha = 0.6f),
-            disabledContentColor = Color.White
-        ),
-        shape = RoundedCornerShape(20.dp)
-    ) {
-        Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(20.dp))
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(text = label, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-    }
-}
+data class NavigationItem(val route: String, val iconRes: Int)
