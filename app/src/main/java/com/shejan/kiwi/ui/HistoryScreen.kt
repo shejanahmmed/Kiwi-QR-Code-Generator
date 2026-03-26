@@ -1,40 +1,42 @@
 package com.shejan.kiwi.ui
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Link
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.ui.graphics.graphicsLayer
 import com.shejan.kiwi.logic.HistoryItem
+import com.shejan.kiwi.logic.QrGenerator
 import com.shejan.kiwi.ui.theme.AmoledBlack
 import com.shejan.kiwi.ui.theme.DarkGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
-import android.content.Intent
-import android.net.Uri
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.Image
-import com.shejan.kiwi.logic.QrGenerator
+import com.shejan.kiwi.util.FileHelper
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -91,7 +93,6 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
                     Text(
                         text = "Delete All",
                         color = Color.Black,
-                        fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -236,13 +237,25 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
                         QrGenerator.generate(selectedItem!!.url, 400)
                     }
                     
-                    if (qrBitmap != null) {
+                     qrBitmap?.let { bit ->
                         Image(
-                            bitmap = qrBitmap.asImageBitmap(),
+                            bitmap = bit.asImageBitmap(),
                             contentDescription = "QR Code",
                             modifier = Modifier
                                 .size(200.dp)
                                 .clip(RoundedCornerShape(16.dp))
+                                .clickable {
+                                    val success = FileHelper.saveToGallery(
+                                        context,
+                                        bit,
+                                        "Kiwi_QR_${System.currentTimeMillis()}"
+                                    )
+                                    if (success) {
+                                        Toast.makeText(context, "Saved to Gallery", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
                                 .background(Color.White)
                                 .padding(12.dp)
                         )
@@ -258,21 +271,35 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     
-                    Text(
-                        text = "Date: ${dateFormatter.format(Date(selectedItem!!.timestamp))}",
-                        color = Color.Gray,
-                        fontSize = 14.sp
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+                    ) {
+                        // Date Text
+                        Text(
+                            text = dateFormatter.format(Date(selectedItem!!.timestamp)),
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+
+                        // Separator
+                        Text(
+                            text = "•",
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+
+                        // Time Text
+                        Text(
+                            text = timeFormatter.format(Date(selectedItem!!.timestamp)),
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                    }
                     
-                    Text(
-                        text = "Time: ${timeFormatter.format(Date(selectedItem!!.timestamp))}",
-                        color = Color.Gray,
-                        fontSize = 14.sp
-                    )
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
