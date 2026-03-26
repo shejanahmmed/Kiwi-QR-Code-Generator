@@ -19,6 +19,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import com.shejan.kiwi.logic.HistoryItem
 import com.shejan.kiwi.ui.theme.AmoledBlack
 import com.shejan.kiwi.ui.theme.DarkGrey
@@ -30,6 +34,11 @@ import java.util.*
 fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     val historyItems by viewModel.allHistory.collectAsState(initial = emptyList())
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "scale")
 
     Column(
         modifier = Modifier
@@ -52,11 +61,25 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
             )
             
             if (historyItems.isNotEmpty()) {
-                IconButton(onClick = { viewModel.clearAll() }) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Clear All",
-                        tint = Color.Gray
+                Box(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        }
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null
+                        ) { showDeleteDialog = true }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "Delete All",
+                        color = Color.Black,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -97,6 +120,52 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
                 }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete entire history?") },
+            text = { Text("Are you sure you want to delete entire history?") },
+            confirmButton = {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(KiwiGreen)
+                        .clickable {
+                            viewModel.clearAll()
+                            showDeleteDialog = false
+                        }
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Sure",
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+            },
+            dismissButton = {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.1f))
+                        .clickable { showDeleteDialog = false }
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp
+                    )
+                }
+            },
+            containerColor = DarkGrey,
+            titleContentColor = Color.White,
+            textContentColor = Color.Gray
+        )
     }
 }
 
