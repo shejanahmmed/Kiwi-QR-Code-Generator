@@ -49,10 +49,15 @@ class MainActivity : ComponentActivity() {
                         FloatingNavBar(navController)
                     }
                 ) { innerPadding ->
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentRoute = navBackStackEntry?.destination?.route
+
                     NavHost(
                         navController = navController,
                         startDestination = "home",
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(
+                            if (currentRoute == "scanner") PaddingValues(0.dp) else innerPadding
+                        )
                     ) {
                         composable("home") { HomeScreen() }
                         composable("settings") { SettingsScreen() }
