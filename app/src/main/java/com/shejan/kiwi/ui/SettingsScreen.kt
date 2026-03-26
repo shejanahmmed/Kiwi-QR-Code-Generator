@@ -133,11 +133,10 @@ fun VersionDialog() {
                 .background(AshGrey),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Info,
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(id = R.mipmap.ic_launcher_foreground),
                 contentDescription = null,
-                tint = KiwiGreen,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(56.dp)
             )
         }
         
