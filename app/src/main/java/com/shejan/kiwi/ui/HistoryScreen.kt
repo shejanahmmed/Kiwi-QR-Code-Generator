@@ -46,7 +46,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
         ) {
             Text(
                 text = "History",
-                fontSize = 32.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = KiwiGreen
             )
