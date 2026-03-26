@@ -34,10 +34,17 @@ import com.shejan.kiwi.ui.theme.KiwiGreen
 @Composable
 fun SettingsScreen() {
     var showDeveloperDialog by remember { mutableStateOf(false) }
+    var showVersionDialog by remember { mutableStateOf(false) }
 
     if (showDeveloperDialog) {
         Dialog(onDismissRequest = { showDeveloperDialog = false }) {
             DeveloperProfileCard()
+        }
+    }
+
+    if (showVersionDialog) {
+        Dialog(onDismissRequest = { showVersionDialog = false }) {
+            VersionDialog()
         }
     }
 
@@ -81,8 +88,9 @@ fun SettingsScreen() {
             }
             items(aboutItems) { item ->
                 SettingsItem(item, onClick = {
-                    if (item.title == "About Developer") {
-                        showDeveloperDialog = true
+                    when (item.title) {
+                        "About Developer" -> showDeveloperDialog = true
+                        "Version Info" -> showVersionDialog = true
                     }
                 })
             }
@@ -105,6 +113,72 @@ fun SettingsScreen() {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun VersionDialog() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(0.85f)
+            .clip(RoundedCornerShape(28.dp))
+            .background(DarkGrey)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .clip(RoundedCornerShape(35.dp))
+                .background(AshGrey),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = null,
+                tint = KiwiGreen,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(20.dp))
+        
+        Text(
+            text = "Kiwi QR Generator",
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = "Version 1.0.0",
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Divider(color = Color.White.copy(alpha = 0.1f))
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Text(
+            text = "Your application is up to date",
+            color = KiwiGreen,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Build: stable-v1.0.0.1",
+            color = Color.White.copy(alpha = 0.3f),
+            fontSize = 12.sp
+        )
     }
 }
 
