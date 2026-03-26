@@ -7,9 +7,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +29,12 @@ import com.shejan.kiwi.logic.HistoryItem
 import com.shejan.kiwi.ui.theme.AmoledBlack
 import com.shejan.kiwi.ui.theme.DarkGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.Image
+import com.shejan.kiwi.logic.QrGenerator
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,7 +42,12 @@ import java.util.*
 fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     val historyItems by viewModel.allHistory.collectAsState(initial = emptyList())
     val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    val timeFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDetailsDialog by remember { mutableStateOf(false) }
+    var selectedItem by remember { mutableStateOf<HistoryItem?>(null) }
+    
+    val context = LocalContext.current
     
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -115,7 +128,11 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
                     HistoryCard(
                         item = item,
                         date = dateFormatter.format(Date(item.timestamp)),
-                        onDelete = { viewModel.deleteItem(item) }
+                        onDelete = { viewModel.deleteItem(item) },
+                        onClick = {
+                            selectedItem = item
+                            showDetailsDialog = true
+                        }
                     )
                 }
             }
@@ -149,16 +166,17 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
             dismissButton = {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White.copy(alpha = 0.1f))
-                        .clickable { showDeleteDialog = false }
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFF5252))
+                        .clickable { showDeleteDialog = false },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Cancel",
-                        color = Color.White,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Cancel",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             },
@@ -167,14 +185,171 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
             textContentColor = Color.Gray
         )
     }
+
+    if (showDetailsDialog && selectedItem != null) {
+        val deleteInteractionSource = remember { MutableInteractionSource() }
+        val isDeletePressed by deleteInteractionSource.collectIsPressedAsState()
+        val deleteScale by animateFloatAsState(if (isDeletePressed) 0.95f else 1f, label = "deleteScale")
+
+        val linkInteractionSource = remember { MutableInteractionSource() }
+        val isLinkPressed by linkInteractionSource.collectIsPressedAsState()
+        val linkScale by animateFloatAsState(if (isLinkPressed) 0.95f else 1f, label = "linkScale")
+
+        AlertDialog(
+            onDismissRequest = { showDetailsDialog = false },
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "History Details",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFF5252))
+                            .clickable { showDetailsDialog = false },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    val qrBitmap = remember(selectedItem) {
+                        QrGenerator.generate(selectedItem!!.url, 400)
+                    }
+                    
+                    if (qrBitmap != null) {
+                        Image(
+                            bitmap = qrBitmap.asImageBitmap(),
+                            contentDescription = "QR Code",
+                            modifier = Modifier
+                                .size(200.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White)
+                                .padding(12.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = selectedItem!!.url,
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Date: ${dateFormatter.format(Date(selectedItem!!.timestamp))}",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                    
+                    Text(
+                        text = "Time: ${timeFormatter.format(Date(selectedItem!!.timestamp))}",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Delete Button
+                        Box(
+                            modifier = Modifier
+                                .graphicsLayer {
+                                    scaleX = deleteScale
+                                    scaleY = deleteScale
+                                }
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White)
+                                .clickable(
+                                    interactionSource = deleteInteractionSource,
+                                    indication = null
+                                ) {
+                                    viewModel.deleteItem(selectedItem!!)
+                                    showDetailsDialog = false
+                                }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = "Delete",
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        // Go to Link Button
+                        Box(
+                            modifier = Modifier
+                                .graphicsLayer {
+                                    scaleX = linkScale
+                                    scaleY = linkScale
+                                }
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White)
+                                .clickable(
+                                    interactionSource = linkInteractionSource,
+                                    indication = null
+                                ) {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(selectedItem!!.url))
+                                    context.startActivity(intent)
+                                }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = "Go to Link",
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                // Confirm button is now in the text slot for central placement
+                Spacer(modifier = Modifier.height(1.dp))
+            },
+            dismissButton = null,
+            containerColor = DarkGrey
+        )
+    }
 }
 
 @Composable
-fun HistoryCard(item: HistoryItem, date: String, onDelete: () -> Unit) {
+fun HistoryCard(item: HistoryItem, date: String, onDelete: () -> Unit, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp)),
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick),
         color = DarkGrey,
     ) {
         Row(
