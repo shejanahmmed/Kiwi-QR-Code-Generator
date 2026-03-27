@@ -371,78 +371,78 @@ fun SettingsScreen() {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
+
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black)
-                .padding(horizontal = 24.dp)
-                .padding(top = 64.dp)
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(top = 24.dp, bottom = 100.dp)
         ) {
-            // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Settings",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = KiwiGreen
-                )
+            // Scrollable header card
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(DarkGrey)
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Settings",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = KiwiGreen
+                    )
+                }
             }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(top = 12.dp, bottom = 100.dp)
-            ) {
-                item {
-                    SectionHeader("Support")
-                }
-                items(supportItems) { item ->
-                    SettingsItem(item, onClick = {
-                        when (item.title) {
-                            "Privacy Policy" -> {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.farjan.me/KIWIPrivecyPolicy/"))
-                                context.startActivity(intent)
-                            }
-                            "Rate Us", "Share App" -> {
-                                Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show()
-                            }
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                SectionHeader("Support")
+            }
+            items(supportItems) { item ->
+                SettingsItem(item, onClick = {
+                    when (item.title) {
+                        "Privacy Policy" -> {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.farjan.me/KIWIPrivecyPolicy/"))
+                            context.startActivity(intent)
                         }
-                    })
-                }
-                
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    SectionHeader("About")
-                }
-                items(aboutItems) { item ->
-                    SettingsItem(item, onClick = {
-                        when (item.title) {
-                            "About Developer" -> showDeveloperDialog = true
-                            "Version Info" -> showVersionDialog = true
+                        "Rate Us", "Share App" -> {
+                            Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show()
                         }
-                    })
-                }
+                    }
+                })
+            }
 
-                item {
-                    Spacer(modifier = Modifier.height(32.dp))
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                "Kiwi QR Generator",
-                                color = Color.White.copy(alpha = 0.5f),
-                                fontSize = 14.sp
-                            )
-                            Text(
-                                "Version 1.0.0",
-                                color = Color.White.copy(alpha = 0.3f),
-                                fontSize = 12.sp
-                            )
-                        }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                SectionHeader("About")
+            }
+            items(aboutItems) { item ->
+                SettingsItem(item, onClick = {
+                    when (item.title) {
+                        "About Developer" -> showDeveloperDialog = true
+                        "Version Info" -> showVersionDialog = true
+                    }
+                })
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            "Kiwi QR Generator",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            "Version 1.0.0",
+                            color = Color.White.copy(alpha = 0.3f),
+                            fontSize = 12.sp
+                        )
                     }
                 }
             }
