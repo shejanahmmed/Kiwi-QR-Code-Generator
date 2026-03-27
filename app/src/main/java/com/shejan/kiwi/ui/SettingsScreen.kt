@@ -2,6 +2,7 @@ package com.shejan.kiwi.ui
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import com.shejan.kiwi.R
 
 import androidx.compose.foundation.background
@@ -85,6 +86,9 @@ fun SettingsScreen() {
                         "Privacy Policy" -> {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.farjan.me/KIWIPrivecyPolicy/"))
                             context.startActivity(intent)
+                        }
+                        "Rate Us", "Share App" -> {
+                            Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show()
                         }
                     }
                 })
