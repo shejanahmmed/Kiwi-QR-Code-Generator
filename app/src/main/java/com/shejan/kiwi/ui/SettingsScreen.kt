@@ -160,63 +160,87 @@ fun VersionDialog(onDismiss: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth(0.85f)
-            .clip(RoundedCornerShape(28.dp))
+            .clip(RoundedCornerShape(32.dp))
             .background(DarkGrey)
+            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(32.dp))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
+                .padding(top = 40.dp, bottom = 32.dp, start = 24.dp, end = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Stylized Icon Container
             Box(
-                modifier = Modifier.size(70.dp),
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color.White.copy(alpha = 0.03f))
+                    .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 androidx.compose.foundation.Image(
                     painter = androidx.compose.ui.res.painterResource(id = R.mipmap.ic_launcher_foreground),
                     contentDescription = null,
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(70.dp)
                 )
             }
             
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             
             Text(
                 text = "Kiwi QR Generator",
                 color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 22.sp,
+                fontWeight = FontWeight.ExtraBold
             )
             
-            Spacer(modifier = Modifier.height(8.dp))
-            
             Text(
-                text = "Version 1.0.0",
-                color = Color.White.copy(alpha = 0.6f),
+                text = "v1.0.0 (Stable)",
+                color = Color.White.copy(alpha = 0.5f),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium
             )
             
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // Status Badge
+            Surface(
+                color = KiwiGreen.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = KiwiGreen,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "LATEST VERSION",
+                        color = KiwiGreen,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Divider(color = Color.White.copy(alpha = 0.05f), thickness = 1.dp)
+            
             Spacer(modifier = Modifier.height(24.dp))
-            
-            Divider(color = Color.White.copy(alpha = 0.1f))
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Text(
-                text = "Your application is up to date",
-                color = KiwiGreen,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
             
             Text(
                 text = "Build: stable-v1.0.0.1",
-                color = Color.White.copy(alpha = 0.3f),
-                fontSize = 12.sp
+                color = Color.White.copy(alpha = 0.2f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium
             )
         }
 
@@ -225,13 +249,14 @@ fun VersionDialog(onDismiss: () -> Unit) {
             onClick = onDismiss,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(8.dp)
+                .padding(12.dp)
+                .background(Color.White.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape)
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
+                tint = Color.White.copy(alpha = 0.7f),
+                modifier = Modifier.size(18.dp)
             )
         }
     }
