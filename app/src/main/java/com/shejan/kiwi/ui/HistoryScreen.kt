@@ -55,87 +55,115 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "scale")
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AmoledBlack)
-            .padding(horizontal = 24.dp)
-            .padding(top = 24.dp)
-    ) {
-        // Header
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+    if (historyItems.isEmpty()) {
+        // Empty state — header + centered message
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AmoledBlack)
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(top = 24.dp, bottom = 100.dp)
         ) {
-            Text(
-                text = "History",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = KiwiGreen
-            )
-            
-            if (historyItems.isNotEmpty()) {
+            item {
+                // Header card
                 Box(
                     modifier = Modifier
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                        }
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White)
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = null
-                        ) { showDeleteDialog = true }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(DarkGrey)
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Delete All",
-                        color = Color.Black,
-                        fontWeight = FontWeight.Medium
+                        text = "History",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = KiwiGreen
                     )
+                }
+            }
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = null,
+                            tint = Color.Gray.copy(alpha = 0.3f),
+                            modifier = Modifier.size(80.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "History is empty",
+                            color = Color.Gray.copy(alpha = 0.5f),
+                            fontSize = 16.sp
+                        )
+                    }
                 }
             }
         }
-
-        if (historyItems.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.History,
-                        contentDescription = null,
-                        tint = Color.Gray.copy(alpha = 0.3f),
-                        modifier = Modifier.size(80.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AmoledBlack)
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(top = 24.dp, bottom = 100.dp)
+        ) {
+            // Header card with Delete All button
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(DarkGrey)
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
-                        text = "History is empty",
-                        color = Color.Gray.copy(alpha = 0.5f),
-                        fontSize = 16.sp
+                        text = "History",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = KiwiGreen
                     )
+                    Box(
+                        modifier = Modifier
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                            }
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White)
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = null
+                            ) { showDeleteDialog = true }
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = "Delete All",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 100.dp)
-            ) {
-                items(historyItems) { item ->
-                    HistoryCard(
-                        item = item,
-                        date = dateFormatter.format(Date(item.timestamp)),
-                        onDelete = { viewModel.deleteItem(item) },
-                        onClick = {
-                            selectedItem = item
-                            showDetailsDialog = true
-                        }
-                    )
-                }
+
+            items(historyItems) { item ->
+                HistoryCard(
+                    item = item,
+                    date = dateFormatter.format(Date(item.timestamp)),
+                    onDelete = { viewModel.deleteItem(item) },
+                    onClick = {
+                        selectedItem = item
+                        showDetailsDialog = true
+                    }
+                )
             }
         }
     }
