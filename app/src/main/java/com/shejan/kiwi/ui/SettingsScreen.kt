@@ -33,6 +33,7 @@ import com.shejan.kiwi.ui.theme.KiwiGreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen() {
+    val context = LocalContext.current
     var showDeveloperDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
 
@@ -79,7 +80,14 @@ fun SettingsScreen() {
                 SectionHeader("Support")
             }
             items(supportItems) { item ->
-                SettingsItem(item)
+                SettingsItem(item, onClick = {
+                    when (item.title) {
+                        "Privacy Policy" -> {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.farjan.me/KIWIPrivecyPolicy/"))
+                            context.startActivity(intent)
+                        }
+                    }
+                })
             }
             
             item {
