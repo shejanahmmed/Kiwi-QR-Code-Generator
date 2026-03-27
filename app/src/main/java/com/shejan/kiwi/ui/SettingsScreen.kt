@@ -36,6 +36,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import com.shejan.kiwi.R
+import com.shejan.kiwi.ui.theme.AmoledBlack
 import com.shejan.kiwi.ui.theme.AshGrey
 import com.shejan.kiwi.ui.theme.DarkGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
@@ -244,33 +245,92 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
         (view.parent as? DialogWindowProvider)?.window
             ?.setBackgroundDrawableResource(android.R.color.transparent)
     }
+    
     Box(
         modifier = Modifier
             .fillMaxWidth(0.9f)
-            .clip(RoundedCornerShape(28.dp))
+            .clip(RoundedCornerShape(32.dp))
             .background(DarkGrey)
+            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(32.dp))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
+                .padding(top = 40.dp, bottom = 32.dp, start = 24.dp, end = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Profile Visual (Initials with Gradient)
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(
+                        androidx.compose.ui.graphics.Brush.linearGradient(
+                            colors = listOf(KiwiGreen, Color(0xFF1B5E20))
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "FA",
+                    color = AmoledBlack,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Black
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
             
-            Text("Farjan Ahmmed", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text("(Shejan)", color = Color.White.copy(alpha = 0.5f), fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            Text(
+                text = "Farjan Ahmmed",
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
             
-            Spacer(modifier = Modifier.height(28.dp))
+            Text(
+                text = "(Shejan)",
+                color = Color.White.copy(alpha = 0.5f),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Developer Badge
+            Surface(
+                color = KiwiGreen.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "APP DEVELOPER",
+                    color = KiwiGreen,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    letterSpacing = 1.sp
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(36.dp))
+            
+            Text(
+                text = "Connect with me",
+                color = Color.White.copy(alpha = 0.3f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.5.sp
+            )
+            
+            Spacer(modifier = Modifier.height(20.dp))
             
             // Social Links Grid
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                SocialIconButton(
+                SocialLink(
                     iconRes = R.drawable.ic_email,
-                    label = "Email",
-                    useTint = true,
                     onClick = {
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
                             data = Uri.parse("mailto:farjan.swe@gmail.com")
@@ -278,42 +338,26 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
                         context.startActivity(intent)
                     }
                 )
-                SocialIconButton(
-                    iconRes = R.drawable.ic_linkedin,
-                    label = "LinkedIn",
-                    useTint = true,
-                    onClick = {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.linkedin.com/in/farjan-ahmmed/")))
-                    }
-                )
-                SocialIconButton(
+                SocialLink(
                     iconRes = R.drawable.ic_github,
-                    label = "GitHub",
-                    useTint = true,
                     onClick = {
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/shejanahmmed")))
                     }
                 )
-            }
-            
-            Spacer(modifier = Modifier.height(20.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                SocialIconButton(
+                SocialLink(
+                    iconRes = R.drawable.ic_linkedin,
+                    onClick = {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.linkedin.com/in/farjan-ahmmed/")))
+                    }
+                )
+                SocialLink(
                     iconRes = R.drawable.ic_facebook,
-                    label = "Facebook",
-                    useTint = true,
                     onClick = {
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/beingshejan/")))
                     }
                 )
-                SocialIconButton(
+                SocialLink(
                     iconRes = R.drawable.ic_instagram,
-                    label = "Instagram",
-                    useTint = true,
                     onClick = {
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/iamshejan/")))
                     }
@@ -326,15 +370,39 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
             onClick = onDismiss,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(8.dp)
+                .padding(12.dp)
+                .background(Color.White.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape)
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
+                tint = Color.White.copy(alpha = 0.7f),
+                modifier = Modifier.size(18.dp)
             )
         }
+    }
+}
+
+@Composable
+fun SocialLink(iconRes: Int, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(AshGrey)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = androidx.compose.ui.res.painterResource(id = iconRes),
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
 
