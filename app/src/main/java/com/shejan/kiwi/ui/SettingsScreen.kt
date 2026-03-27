@@ -28,10 +28,13 @@ import android.graphics.Shader
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import com.shejan.kiwi.R
 import com.shejan.kiwi.ui.theme.AshGrey
 import com.shejan.kiwi.ui.theme.DarkGrey
@@ -148,6 +151,11 @@ fun SocialIconButton(iconRes: Int, label: String, useTint: Boolean = true, onCli
 
 @Composable
 fun VersionDialog(onDismiss: () -> Unit) {
+    val view = LocalView.current
+    SideEffect {
+        (view.parent as? DialogWindowProvider)?.window
+            ?.setBackgroundDrawableResource(android.R.color.transparent)
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth(0.85f)
@@ -231,7 +239,11 @@ fun VersionDialog(onDismiss: () -> Unit) {
 @Composable
 fun DeveloperProfileCard(onDismiss: () -> Unit) {
     val context = LocalContext.current
-    
+    val view = LocalView.current
+    SideEffect {
+        (view.parent as? DialogWindowProvider)?.window
+            ?.setBackgroundDrawableResource(android.R.color.transparent)
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth(0.9f)
@@ -334,21 +346,26 @@ fun SettingsScreen() {
     val context = LocalContext.current
     var showVersionDialog by remember { mutableStateOf(false) }
     var showDeveloperDialog by remember { mutableStateOf(false) }
-    
-    // Smooth animated blur transition (300ms)
-    val blurRadius by animateFloatAsState(
-        targetValue = if (showVersionDialog || showDeveloperDialog) 15f else 0f,
+    val isDialogShowing = showVersionDialog || showDeveloperDialog
+    val scrimAlpha by animateFloatAsState(
+        targetValue = if (isDialogShowing) 0.6f else 0f,
         animationSpec = tween(durationMillis = 300)
     )
 
     if (showVersionDialog) {
-        Dialog(onDismissRequest = { showVersionDialog = false }) {
+        Dialog(
+            onDismissRequest = { showVersionDialog = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
             VersionDialog(onDismiss = { showVersionDialog = false })
         }
     }
 
     if (showDeveloperDialog) {
-        Dialog(onDismissRequest = { showDeveloperDialog = false }) {
+        Dialog(
+            onDismissRequest = { showDeveloperDialog = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
             DeveloperProfileCard(onDismiss = { showDeveloperDialog = false })
         }
     }
@@ -360,24 +377,6 @@ fun SettingsScreen() {
                 .background(Color.Black)
                 .padding(horizontal = 24.dp)
                 .padding(top = 64.dp)
-                .graphicsLayer {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && blurRadius > 0.1f) {
-                        try {
-                            renderEffect = android.graphics.RenderEffect.createBlurEffect(
-                                blurRadius,
-                                blurRadius,
-                                Shader.TileMode.CLAMP
-                            ).asComposeRenderEffect()
-                        } catch (e: Exception) {
-                            // Fallback handled by draw.blur Modifier
-                        }
-                    }
-                }
-                .then(
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                        Modifier.blur(blurRadius.dp)
-                    } else Modifier
-                )
         ) {
             // Header
             Row(
@@ -447,6 +446,15 @@ fun SettingsScreen() {
                     }
                 }
             }
+        }
+
+        // Dark scrim overlay when dialog is showing
+        if (scrimAlpha > 0f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = scrimAlpha))
+            )
         }
     }
 }
