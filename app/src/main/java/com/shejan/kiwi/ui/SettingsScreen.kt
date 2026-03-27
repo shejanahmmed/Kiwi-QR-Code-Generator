@@ -8,6 +8,7 @@ import com.shejan.kiwi.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,6 +41,12 @@ fun SettingsScreen() {
     var showDeveloperDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
 
+    val blurAnim by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (showVersionDialog || showDeveloperDialog) 20f else 0f,
+        label = "blur",
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 300)
+    )
+
     if (showDeveloperDialog) {
         Dialog(onDismissRequest = { showDeveloperDialog = false }) {
             DeveloperProfileCard()
@@ -46,81 +55,94 @@ fun SettingsScreen() {
 
     if (showVersionDialog) {
         Dialog(onDismissRequest = { showVersionDialog = false }) {
-            VersionDialog()
+            VersionDialog(onDismiss = { showVersionDialog = false })
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AmoledBlack)
-            .padding(horizontal = 24.dp)
-            .padding(top = 24.dp)
-    ) {
-        // Header
-        Row(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Settings",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = KiwiGreen
-            )
-        }
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 12.dp, bottom = 100.dp)
-        ) {
-            item {
-                SectionHeader("Support")
-            }
-            items(supportItems) { item ->
-                SettingsItem(item, onClick = {
-                    when (item.title) {
-                        "Privacy Policy" -> {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.farjan.me/KIWIPrivecyPolicy/"))
-                            context.startActivity(intent)
-                        }
-                        "Rate Us", "Share App" -> {
-                            Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show()
+                .fillMaxSize()
+                .background(AmoledBlack)
+                .padding(horizontal = 24.dp)
+                .padding(top = 24.dp)
+                .graphicsLayer {
+                    if (blurAnim > 0f && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                        try {
+                            renderEffect = android.graphics.RenderEffect.createBlurEffect(
+                                blurAnim, blurAnim, android.graphics.Shader.TileMode.CLAMP
+                            ).asComposeRenderEffect()
+                        } catch (e: Exception) {
+                            // Fallback for some devices where blur might fail
                         }
                     }
-                })
-            }
-            
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                SectionHeader("About")
-            }
-            items(aboutItems) { item ->
-                SettingsItem(item, onClick = {
-                    when (item.title) {
-                        "About Developer" -> showDeveloperDialog = true
-                        "Version Info" -> showVersionDialog = true
-                    }
-                })
+                }
+        ) {
+            // Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Settings",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = KiwiGreen
+                )
             }
 
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            "Kiwi QR Generator",
-                            color = Color.White.copy(alpha = 0.5f),
-                            fontSize = 14.sp
-                        )
-                        Text(
-                            "Version 1.0.0",
-                            color = Color.White.copy(alpha = 0.3f),
-                            fontSize = 12.sp
-                        )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(top = 12.dp, bottom = 100.dp)
+            ) {
+                item {
+                    SectionHeader("Support")
+                }
+                items(supportItems) { item ->
+                    SettingsItem(item, onClick = {
+                        when (item.title) {
+                            "Privacy Policy" -> {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.farjan.me/KIWIPrivecyPolicy/"))
+                                context.startActivity(intent)
+                            }
+                            "Rate Us", "Share App" -> {
+                                Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    })
+                }
+                
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SectionHeader("About")
+                }
+                items(aboutItems) { item ->
+                    SettingsItem(item, onClick = {
+                        when (item.title) {
+                            "About Developer" -> showDeveloperDialog = true
+                            "Version Info" -> showVersionDialog = true
+                        }
+                    })
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "Kiwi QR Generator",
+                                color = Color.White.copy(alpha = 0.5f),
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                "Version 1.0.0",
+                                color = Color.White.copy(alpha = 0.3f),
+                                fontSize = 12.sp
+                            )
+                        }
                     }
                 }
             }
@@ -129,67 +151,87 @@ fun SettingsScreen() {
 }
 
 @Composable
-fun VersionDialog() {
-    Column(
+fun VersionDialog(onDismiss: () -> Unit) {
+    Box(
         modifier = Modifier
             .fillMaxWidth(0.85f)
             .clip(RoundedCornerShape(28.dp))
             .background(DarkGrey)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .size(70.dp)
-                .clip(RoundedCornerShape(35.dp))
-                .background(AshGrey),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            androidx.compose.foundation.Image(
-                painter = androidx.compose.ui.res.painterResource(id = R.mipmap.ic_launcher_foreground),
-                contentDescription = null,
-                modifier = Modifier.size(56.dp)
+            Box(
+                modifier = Modifier
+                    .size(70.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(AshGrey),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = R.mipmap.ic_launcher_foreground),
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            Text(
+                text = "Kiwi QR Generator",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Version 1.0.0",
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Divider(color = Color.White.copy(alpha = 0.1f))
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Text(
+                text = "Your application is up to date",
+                color = KiwiGreen,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = "Build: stable-v1.0.0.1",
+                color = Color.White.copy(alpha = 0.3f),
+                fontSize = 12.sp
             )
         }
-        
-        Spacer(modifier = Modifier.height(20.dp))
-        
-        Text(
-            text = "Kiwi QR Generator",
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        Text(
-            text = "Version 1.0.0",
-            color = Color.White.copy(alpha = 0.6f),
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium
-        )
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        Divider(color = Color.White.copy(alpha = 0.1f))
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        Text(
-            text = "Your application is up to date",
-            color = KiwiGreen,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = "Build: stable-v1.0.0.1",
-            color = Color.White.copy(alpha = 0.3f),
-            fontSize = 12.sp
-        )
+
+        // Close Button
+        IconButton(
+            onClick = onDismiss,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
 
@@ -206,13 +248,17 @@ fun SectionHeader(title: String) {
 
 @Composable
 fun SettingsItem(item: SettingsItemData, onClick: () -> Unit = {}) {
+    val interactionSource = remember { MutableInteractionSource() }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp)
             .clip(RoundedCornerShape(20.dp))
             .background(AshGrey)
-            .clickable { onClick() }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() }
             .padding(horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -333,11 +379,15 @@ fun DeveloperProfileCard() {
 
 @Composable
 fun SocialIconButton(iconRes: Int, label: String, useTint: Boolean = true, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() }
             .padding(8.dp)
     ) {
         Box(
