@@ -37,11 +37,14 @@ import com.google.mlkit.vision.common.InputImage
 import com.shejan.kiwi.ui.theme.AmoledBlack
 import com.shejan.kiwi.ui.theme.DarkGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
+import com.shejan.kiwi.ui.HistoryViewModel
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 @Composable
-fun ScannerScreen() {
+fun ScannerScreen(
+    viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
     val context = LocalContext.current
     var hasCameraPermission by remember { mutableStateOf(false) }
 
@@ -63,10 +66,13 @@ fun ScannerScreen() {
     ) {
         if (hasCameraPermission) {
             CameraScanner(
-                onQrCodeScanned = { url ->
-                    if (url.startsWith("http://") || url.startsWith("https://")) {
+                onQrCodeScanned = { scannedValue ->
+                    // Save every scan to history
+                    viewModel.saveUrl(scannedValue, "scanned")
+                    // Open URLs in browser
+                    if (scannedValue.startsWith("http://") || scannedValue.startsWith("https://")) {
                         try {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(scannedValue))
                             context.startActivity(intent)
                         } catch (e: Exception) {
                             Log.e("ScannerScreen", "Error opening URL: $e")

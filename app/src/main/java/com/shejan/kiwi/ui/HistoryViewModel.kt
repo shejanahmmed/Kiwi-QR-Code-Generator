@@ -18,9 +18,9 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
         allHistory = repository.allHistory
     }
 
-    fun saveUrl(url: String) {
+    fun saveUrl(url: String, type: String = "generated") {
         viewModelScope.launch {
-            repository.insert(url)
+            repository.insert(url, type)
         }
     }
 

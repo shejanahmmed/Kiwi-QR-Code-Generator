@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -360,30 +361,32 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
                             )
                         }
 
-                        // Go to Link Button
-                        Box(
-                            modifier = Modifier
-                                .graphicsLayer {
-                                    scaleX = linkScale
-                                    scaleY = linkScale
-                                }
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White)
-                                .clickable(
-                                    interactionSource = linkInteractionSource,
-                                    indication = null
-                                ) {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(selectedItem!!.url))
-                                    context.startActivity(intent)
-                                }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = "Go to Link",
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
+                        // Go to Link Button — only show for URLs
+                        if (selectedItem!!.url.startsWith("http://") || selectedItem!!.url.startsWith("https://")) {
+                            Box(
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        scaleX = linkScale
+                                        scaleY = linkScale
+                                    }
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White)
+                                    .clickable(
+                                        interactionSource = linkInteractionSource,
+                                        indication = null
+                                    ) {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(selectedItem!!.url))
+                                        context.startActivity(intent)
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = "Go to Link",
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -400,6 +403,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
 
 @Composable
 fun HistoryCard(item: HistoryItem, date: String, onDelete: () -> Unit, onClick: () -> Unit) {
+    val isScanned = item.type == "scanned"
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -420,7 +424,7 @@ fun HistoryCard(item: HistoryItem, date: String, onDelete: () -> Unit, onClick: 
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Link,
+                    imageVector = if (isScanned) Icons.Default.QrCodeScanner else Icons.Default.Link,
                     contentDescription = null,
                     tint = KiwiGreen,
                     modifier = Modifier.size(24.dp)
@@ -437,12 +441,36 @@ fun HistoryCard(item: HistoryItem, date: String, onDelete: () -> Unit, onClick: 
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
                 )
+                
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = date,
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = date,
+                        color = Color.Gray,
+                        fontSize = 13.sp
+                    )
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "•", color = Color.Gray.copy(alpha = 0.3f), fontSize = 12.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    // Type badge — standardized colors
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color.White.copy(alpha = 0.05f))
+                            .padding(horizontal = 6.dp, vertical = 1.dp)
+                    ) {
+                        Text(
+                            text = if (isScanned) "SCANNED" else "GENERATED",
+                            color = Color.Gray.copy(alpha = 0.8f),
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+                }
             }
 
             IconButton(onClick = onDelete) {
