@@ -2,9 +2,10 @@ package com.shejan.kiwi.ui
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
-import com.shejan.kiwi.R
-
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,41 +18,328 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposeRenderEffect
+import android.graphics.Shader
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.shejan.kiwi.ui.theme.AmoledBlack
+import androidx.compose.ui.window.Dialog
+import com.shejan.kiwi.R
 import com.shejan.kiwi.ui.theme.AshGrey
 import com.shejan.kiwi.ui.theme.DarkGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
+
+// --- Data Models & Constants ---
+
+data class SettingsItemData(
+    val title: String,
+    val icon: ImageVector
+)
+
+val supportItems = listOf(
+    SettingsItemData("Rate Us", Icons.Default.Star),
+    SettingsItemData("Share App", Icons.Default.Share),
+    SettingsItemData("Privacy Policy", Icons.Default.PrivacyTip)
+)
+
+val aboutItems = listOf(
+    SettingsItemData("About Developer", Icons.Default.Person),
+    SettingsItemData("Version Info", Icons.Default.Info)
+)
+
+// --- Helper Composables ---
+
+@Composable
+fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        color = KiwiGreen,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+}
+
+@Composable
+fun SettingsItem(item: SettingsItemData, onClick: () -> Unit = {}) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(AshGrey)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() }
+            .padding(horizontal = 20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = item.icon,
+            contentDescription = item.title,
+            tint = Color.White,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = item.title,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f)
+        )
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = Color.White.copy(alpha = 0.3f),
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+fun SocialIconButton(iconRes: Int, label: String, useTint: Boolean = true, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() }
+            .padding(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(52.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(AshGrey),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = androidx.compose.ui.res.painterResource(id = iconRes),
+                contentDescription = label,
+                tint = if (useTint) Color.White else Color.Unspecified,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.7f),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+// --- Dialog Functions ---
+
+@Composable
+fun VersionDialog(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(0.85f)
+            .clip(RoundedCornerShape(28.dp))
+            .background(DarkGrey)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier.size(70.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = R.mipmap.ic_launcher_foreground),
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            Text(
+                text = "Kiwi QR Generator",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Version 1.0.0",
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Divider(color = Color.White.copy(alpha = 0.1f))
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Text(
+                text = "Your application is up to date",
+                color = KiwiGreen,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = "Build: stable-v1.0.0.1",
+                color = Color.White.copy(alpha = 0.3f),
+                fontSize = 12.sp
+            )
+        }
+
+        // Close Button
+        IconButton(
+            onClick = onDismiss,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun DeveloperProfileCard(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(0.9f)
+            .clip(RoundedCornerShape(28.dp))
+            .background(DarkGrey)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            
+            Text("Farjan Ahmmed", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("(Shejan)", color = Color.White.copy(alpha = 0.5f), fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            
+            Spacer(modifier = Modifier.height(28.dp))
+            
+            // Social Links Grid
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                SocialIconButton(
+                    iconRes = R.drawable.ic_email,
+                    label = "Email",
+                    useTint = true,
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:farjan.swe@gmail.com")
+                        }
+                        context.startActivity(intent)
+                    }
+                )
+                SocialIconButton(
+                    iconRes = R.drawable.ic_linkedin,
+                    label = "LinkedIn",
+                    useTint = true,
+                    onClick = {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.linkedin.com/in/farjan-ahmmed/")))
+                    }
+                )
+                SocialIconButton(
+                    iconRes = R.drawable.ic_github,
+                    label = "GitHub",
+                    useTint = true,
+                    onClick = {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/shejanahmmed")))
+                    }
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                SocialIconButton(
+                    iconRes = R.drawable.ic_facebook,
+                    label = "Facebook",
+                    useTint = true,
+                    onClick = {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/beingshejan/")))
+                    }
+                )
+                SocialIconButton(
+                    iconRes = R.drawable.ic_instagram,
+                    label = "Instagram",
+                    useTint = true,
+                    onClick = {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/iamshejan/")))
+                    }
+                )
+            }
+        }
+
+        // Close Button
+        IconButton(
+            onClick = onDismiss,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+// --- Main Screen ---
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen() {
     val context = LocalContext.current
-    var showDeveloperDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
-
-    val blurAnim by androidx.compose.animation.core.animateFloatAsState(
-        targetValue = if (showVersionDialog || showDeveloperDialog) 20f else 0f,
-        label = "blur",
-        animationSpec = androidx.compose.animation.core.tween(durationMillis = 300)
+    var showDeveloperDialog by remember { mutableStateOf(false) }
+    
+    // Smooth animated blur transition (300ms)
+    val blurRadius by animateFloatAsState(
+        targetValue = if (showVersionDialog || showDeveloperDialog) 15f else 0f,
+        animationSpec = tween(durationMillis = 300)
     )
-
-    if (showDeveloperDialog) {
-        Dialog(onDismissRequest = { showDeveloperDialog = false }) {
-            DeveloperProfileCard()
-        }
-    }
 
     if (showVersionDialog) {
         Dialog(onDismissRequest = { showVersionDialog = false }) {
@@ -59,24 +347,37 @@ fun SettingsScreen() {
         }
     }
 
+    if (showDeveloperDialog) {
+        Dialog(onDismissRequest = { showDeveloperDialog = false }) {
+            DeveloperProfileCard(onDismiss = { showDeveloperDialog = false })
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(AmoledBlack)
+                .background(Color.Black)
                 .padding(horizontal = 24.dp)
-                .padding(top = 24.dp)
+                .padding(top = 64.dp)
                 .graphicsLayer {
-                    if (blurAnim > 0f && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && blurRadius > 0.1f) {
                         try {
                             renderEffect = android.graphics.RenderEffect.createBlurEffect(
-                                blurAnim, blurAnim, android.graphics.Shader.TileMode.CLAMP
+                                blurRadius,
+                                blurRadius,
+                                Shader.TileMode.CLAMP
                             ).asComposeRenderEffect()
                         } catch (e: Exception) {
-                            // Fallback for some devices where blur might fail
+                            // Fallback handled by draw.blur Modifier
                         }
                     }
                 }
+                .then(
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                        Modifier.blur(blurRadius.dp)
+                    } else Modifier
+                )
         ) {
             // Header
             Row(
@@ -149,283 +450,3 @@ fun SettingsScreen() {
         }
     }
 }
-
-@Composable
-fun VersionDialog(onDismiss: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth(0.85f)
-            .clip(RoundedCornerShape(28.dp))
-            .background(DarkGrey)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(AshGrey),
-                contentAlignment = Alignment.Center
-            ) {
-                androidx.compose.foundation.Image(
-                    painter = androidx.compose.ui.res.painterResource(id = R.mipmap.ic_launcher_foreground),
-                    contentDescription = null,
-                    modifier = Modifier.size(56.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(20.dp))
-            
-            Text(
-                text = "Kiwi QR Generator",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "Version 1.0.0",
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Divider(color = Color.White.copy(alpha = 0.1f))
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Text(
-                text = "Your application is up to date",
-                color = KiwiGreen,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text(
-                text = "Build: stable-v1.0.0.1",
-                color = Color.White.copy(alpha = 0.3f),
-                fontSize = 12.sp
-            )
-        }
-
-        // Close Button
-        IconButton(
-            onClick = onDismiss,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(8.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-@Composable
-fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        color = KiwiGreen,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(bottom = 8.dp)
-    )
-}
-
-@Composable
-fun SettingsItem(item: SettingsItemData, onClick: () -> Unit = {}) {
-    val interactionSource = remember { MutableInteractionSource() }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(AshGrey)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onClick() }
-            .padding(horizontal = 20.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = item.icon,
-            contentDescription = item.title,
-            tint = Color.White,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = item.title,
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f)
-        )
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = Color.White.copy(alpha = 0.3f),
-            modifier = Modifier.size(20.dp)
-        )
-    }
-}
-
-@Composable
-fun DeveloperProfileCard() {
-    val context = LocalContext.current
-    
-    Column(
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .clip(RoundedCornerShape(28.dp))
-            .background(DarkGrey)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Profile Placeholder
-        Box(
-            modifier = Modifier
-                .size(80.dp)
-                .clip(RoundedCornerShape(40.dp))
-                .background(AshGrey)
-                .border(2.dp, KiwiGreen.copy(alpha = 0.3f), RoundedCornerShape(40.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("S", fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, color = KiwiGreen)
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text("Farjan Ahmmed", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Text("(Shejan)", color = Color.White.copy(alpha = 0.5f), fontSize = 16.sp, fontWeight = FontWeight.Medium)
-        Text("@shejanahmmed", color = KiwiGreen, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-        
-        Spacer(modifier = Modifier.height(28.dp))
-        
-        // Social Links Grid
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            SocialIconButton(
-                iconRes = R.drawable.ic_email,
-                label = "Email",
-                useTint = true,
-                onClick = {
-                    val intent = Intent(Intent.ACTION_SENDTO).apply {
-                        data = Uri.parse("mailto:farjan.swe@gmail.com")
-                    }
-                    context.startActivity(intent)
-                }
-            )
-            SocialIconButton(
-                iconRes = R.drawable.ic_linkedin,
-                label = "LinkedIn",
-                useTint = true,
-                onClick = {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.linkedin.com/in/farjan-ahmmed/")))
-                }
-            )
-            SocialIconButton(
-                iconRes = R.drawable.ic_github,
-                label = "GitHub",
-                useTint = true,
-                onClick = {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/shejanahmmed")))
-                }
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(20.dp))
-        
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            SocialIconButton(
-                iconRes = R.drawable.ic_facebook,
-                label = "Facebook",
-                useTint = true,
-                onClick = {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/beingshejan/")))
-                }
-            )
-            SocialIconButton(
-                iconRes = R.drawable.ic_instagram,
-                label = "Instagram",
-                useTint = true,
-                onClick = {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/iamshejan/")))
-                }
-            )
-        }
-    }
-}
-
-@Composable
-fun SocialIconButton(iconRes: Int, label: String, useTint: Boolean = true, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onClick() }
-            .padding(8.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(52.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(AshGrey),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = androidx.compose.ui.res.painterResource(id = iconRes),
-                contentDescription = label,
-                tint = if (useTint) Color.White else Color.Unspecified,
-                modifier = Modifier.size(28.dp)
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = label,
-            color = Color.White.copy(alpha = 0.7f),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-data class SettingsItemData(
-    val title: String,
-    val icon: ImageVector
-)
-
-val supportItems = listOf(
-    SettingsItemData("Rate Us", Icons.Default.Star),
-    SettingsItemData("Share App", Icons.Default.Share),
-    SettingsItemData("Privacy Policy", Icons.Default.PrivacyTip)
-)
-
-val aboutItems = listOf(
-    SettingsItemData("About Developer", Icons.Default.Person),
-    SettingsItemData("Version Info", Icons.Default.Info)
-)
