@@ -1,16 +1,13 @@
 package com.shejan.kiwi.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
+/**
+ * The default dark color scheme for the Kiwi application.
+ * Configured specifically for AMOLED displays using pure black backgrounds.
+ */
 private val DarkColorScheme = darkColorScheme(
     primary = KiwiGreen,
     secondary = DarkGrey,
@@ -24,6 +21,13 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = White
 )
 
+/**
+ * The core theme composable for the Kiwi application.
+ * Applies the [DarkColorScheme] and custom typography to the surrounding content.
+ * Note: Kiwi is designed with a forced dark theme to maintain its premium aesthetic.
+ * 
+ * @param content The composable content to be themed.
+ */
 @Composable
 fun KiwiTheme(
     content: @Composable () -> Unit

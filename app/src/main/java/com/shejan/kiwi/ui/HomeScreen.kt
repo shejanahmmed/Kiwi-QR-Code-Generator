@@ -31,11 +31,28 @@ import com.shejan.kiwi.ui.theme.KiwiGreen
 import com.shejan.kiwi.util.FileHelper
 import com.shejan.kiwi.ui.HistoryViewModel
 
+/**
+ * The Home Screen of the Kiwi app.
+ * Provides a user interface for entering text/links and generating QR codes in real-time.
+ * 
+ * @param viewModel The [HistoryViewModel] used to save generated QRs to history.
+ * @param initialUrl Optional initial text to populate the input field (e.g., from a shared intent).
+ */
 @Composable
-fun HomeScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+fun HomeScreen(
+    viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    initialUrl: String? = null
+) {
     var textInput by remember { mutableStateOf("") }
     var qrBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
+
+    // Auto-populate textInput if shared from another app
+    LaunchedEffect(initialUrl) {
+        if (initialUrl != null) {
+            textInput = initialUrl
+        }
+    }
 
     // Generate QR when text changes
     LaunchedEffect(textInput) {
@@ -61,7 +78,7 @@ fun HomeScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compos
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // Header
+        // App Title
         Text(
             text = "Kiwi",
             fontSize = 32.sp,
@@ -80,6 +97,7 @@ fun HomeScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compos
             contentAlignment = Alignment.Center
         ) {
             if (qrBitmap == null) {
+                // Placeholder UI when no QR is generated
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         imageVector = Icons.Default.QrCode,
@@ -95,6 +113,7 @@ fun HomeScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compos
                     )
                 }
             } else {
+                // Display the generated QR bitmap
                 qrBitmap?.let {
                     Image(
                         bitmap = it.asImageBitmap(),
@@ -107,7 +126,7 @@ fun HomeScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compos
             }
         }
 
-        // Input Field
+        // Input Field for URL/Text
         OutlinedTextField(
             value = textInput,
             onValueChange = { textInput = it },
@@ -115,6 +134,7 @@ fun HomeScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compos
             placeholder = { Text("Paste link here...", color = Color.Gray) },
             trailingIcon = {
                 if (textInput.isEmpty()) {
+                    // Paste from clipboard button
                     TextButton(
                         modifier = Modifier.padding(end = 8.dp),
                         onClick = {
@@ -132,6 +152,7 @@ fun HomeScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compos
                         Text("Paste", fontWeight = FontWeight.Bold)
                     }
                 } else {
+                    // Clear input button
                     IconButton(
                         onClick = { textInput = "" },
                         modifier = Modifier.padding(end = 4.dp)
@@ -157,7 +178,7 @@ fun HomeScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compos
             )
         )
 
-        // Action Buttons
+        // Action Buttons: Save and Share
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -195,6 +216,15 @@ fun HomeScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compos
     }
 }
 
+/**
+ * A customized button for primary actions on the Home Screen.
+ * 
+ * @param icon The vector icon to display on the button.
+ * @param label The text label for the button.
+ * @param modifier Modifier for layout customization.
+ * @param enabled Whether the button is interactive.
+ * @param onClick Callback when the button is clicked.
+ */
 @Composable
 fun ActionButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,

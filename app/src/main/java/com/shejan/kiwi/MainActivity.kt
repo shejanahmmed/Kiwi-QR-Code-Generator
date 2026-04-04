@@ -32,9 +32,20 @@ import com.shejan.kiwi.ui.theme.KiwiTheme
 
 import androidx.activity.SystemBarStyle
 
+/**
+ * Main Activity of the Kiwi app.
+ * Handles the overall navigation structure, edge-to-edge display, 
+ * and incoming share intents from other apps.
+ */
 class MainActivity : ComponentActivity() {
+    private var sharedTextState = mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Process any text shared from other apps
+        handleIntent(intent)
+        
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
@@ -42,6 +53,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             KiwiTheme {
                 val navController = rememberNavController()
+                val sharedText by sharedTextState
+                
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = AmoledBlack,
@@ -59,7 +72,15 @@ class MainActivity : ComponentActivity() {
                             if (currentRoute == "scanner") PaddingValues(0.dp) else innerPadding
                         )
                     ) {
-                        composable("home") { HomeScreen() }
+                        composable("home") { 
+                            HomeScreen(initialUrl = sharedText) 
+                            // Reset state after consumption to prevent re-triggering
+                            LaunchedEffect(sharedText) {
+                                if (sharedText != null) {
+                                    sharedTextState.value = null
+                                }
+                            }
+                        }
                         composable("settings") { SettingsScreen() }
                         composable("history") { HistoryScreen() }
                         composable("scanner") { ScannerScreen() }
@@ -68,8 +89,29 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    /**
+     * Extracts text from an incoming ACTION_SEND intent.
+     * @param intent The intent to handle.
+     */
+    private fun handleIntent(intent: android.content.Intent?) {
+        if (intent?.action == android.content.Intent.ACTION_SEND && intent.type == "text/plain") {
+            intent.getStringExtra(android.content.Intent.EXTRA_TEXT)?.let { incomingText ->
+                sharedTextState.value = incomingText
+            }
+        }
+    }
 }
 
+/**
+ * A floating navigation bar component shown at the bottom of the screen.
+ * @param navController The navigation controller used for switching routes.
+ */
 @Composable
 fun FloatingNavBar(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -103,16 +145,10 @@ fun FloatingNavBar(navController: NavController) {
                     onClick = {
                         if (currentRoute != item.route) {
                             navController.navigate(item.route) {
-                                // Pop up to the start destination of the graph to
-                                // avoid building up a large stack of destinations
-                                // on the back stack as users select items
                                 popUpTo("home") {
                                     saveState = true
                                 }
-                                // Avoid multiple copies of the same destination when
-                                // reselecting the same item
                                 launchSingleTop = true
-                                // Restore state when reselecting a previously selected item
                                 restoreState = true
                             }
                         }
@@ -131,4 +167,9 @@ fun FloatingNavBar(navController: NavController) {
     }
 }
 
+/**
+ * Data class representing a navigation item in the bottom bar.
+ * @property route The navigation route associated with this item.
+ * @property iconRes The drawable resource ID for the item's icon.
+ */
 data class NavigationItem(val route: String, val iconRes: Int)

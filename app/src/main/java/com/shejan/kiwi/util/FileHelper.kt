@@ -13,7 +13,21 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 
+/**
+ * Utility object for handling file-related operations such as saving to gallery and sharing images.
+ * Manages compatibility between different Android versions (Scoped Storage vs Legacy).
+ */
 object FileHelper {
+    
+    /**
+     * Saves a [Bitmap] to the device's public gallery.
+     * Uses [MediaStore] for modern Android versions (Q+) to ensure scoped storage compliance.
+     * 
+     * @param context The application context.
+     * @param bitmap The QR code bitmap to save.
+     * @param fileName The desired name for the image file.
+     * @return True if the image was successfully saved, false otherwise.
+     */
     fun saveToGallery(context: Context, bitmap: Bitmap, fileName: String): Boolean {
         val resolver = context.contentResolver
         val imageCollection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -52,6 +66,14 @@ object FileHelper {
         }
     }
 
+    /**
+     * Shares a [Bitmap] with other applications using a [FileProvider].
+     * Temporarily saves the image to the app's cache directory before sharing.
+     * 
+     * @param context The application context.
+     * @param bitmap The QR code bitmap to share.
+     * @param fileName The desired name for the temporary file.
+     */
     fun shareImage(context: Context, bitmap: Bitmap, fileName: String) {
         try {
             val cachePath = File(context.cacheDir, "images")
@@ -61,6 +83,7 @@ object FileHelper {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
             stream.close()
 
+            // Generate content URI using FileProvider for secure sharing
             val contentUri: Uri = FileProvider.getUriForFile(context, "com.shejan.kiwi.fileprovider", file)
 
             val intent = Intent(Intent.ACTION_SEND).apply {

@@ -41,6 +41,12 @@ import com.shejan.kiwi.ui.HistoryViewModel
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+/**
+ * The Scanner Screen of the Kiwi app.
+ * Handles camera permissions and integrates [CameraScanner] to read QR codes using Google ML Kit.
+ * 
+ * @param viewModel The [HistoryViewModel] used to save scanned QR data.
+ */
 @Composable
 fun ScannerScreen(
     viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
@@ -48,6 +54,7 @@ fun ScannerScreen(
     val context = LocalContext.current
     var hasCameraPermission by remember { mutableStateOf(false) }
 
+    // Launcher for requesting camera permission
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { granted ->
@@ -55,6 +62,7 @@ fun ScannerScreen(
         }
     )
 
+    // Request permission on first launch
     LaunchedEffect(Unit) {
         permissionLauncher.launch(Manifest.permission.CAMERA)
     }
@@ -69,7 +77,7 @@ fun ScannerScreen(
                 onQrCodeScanned = { scannedValue ->
                     // Save every scan to history
                     viewModel.saveUrl(scannedValue, "scanned")
-                    // Open URLs in browser
+                    // Open URLs in browser if applicable
                     if (scannedValue.startsWith("http://") || scannedValue.startsWith("https://")) {
                         try {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(scannedValue))
@@ -81,52 +89,67 @@ fun ScannerScreen(
                 }
             )
         } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    imageVector = Icons.Default.QrCodeScanner,
-                    contentDescription = null,
-                    tint = KiwiGreen,
-                    modifier = Modifier.size(64.dp)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Camera Permission Required",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "We need camera access to scan QR codes.",
-                    color = Color.Gray,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
-                    colors = ButtonDefaults.buttonColors(containerColor = KiwiGreen),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Grant Permission", color = AmoledBlack)
-                }
-            }
+            // UI shown when camera permission is denied
+            PermissionDeniedPlaceholder(onGrantClick = { permissionLauncher.launch(Manifest.permission.CAMERA) })
         }
     }
 }
 
+/**
+ * A placeholder UI for when camera permission is denied.
+ * @param onGrantClick Callback for the permission request button.
+ */
+@Composable
+private fun PermissionDeniedPlaceholder(onGrantClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Default.QrCodeScanner,
+            contentDescription = null,
+            tint = KiwiGreen,
+            modifier = Modifier.size(64.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Camera Permission Required",
+            color = Color.White,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "We need camera access to scan QR codes.",
+            color = Color.Gray,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = onGrantClick,
+            colors = ButtonDefaults.buttonColors(containerColor = KiwiGreen),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text("Grant Permission", color = AmoledBlack)
+        }
+    }
+}
+
+/**
+ * Camera preview and analysis component using CameraX and ML Kit Barcode Scanning.
+ * 
+ * @param onQrCodeScanned Callback triggered when a QR code is detected.
+ */
 @Composable
 fun CameraScanner(onQrCodeScanned: (String) -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraExecutor: ExecutorService = remember { Executors.newSingleThreadExecutor() }
     
-    // Track last scanned URL to avoid repeated opens for the same code in a short time
+    // Track last scanned URL and time for debouncing repeated scans
     var lastScannedUrl by remember { mutableStateOf("") }
     var lastScanTime by remember { mutableLongStateOf(0L) }
     var isFlashOn by remember { mutableStateOf(false) }
@@ -148,16 +171,19 @@ fun CameraScanner(onQrCodeScanned: (String) -> Unit) {
             cameraProviderFuture.addListener({
                 val cameraProvider = cameraProviderFuture.get()
                 
+                // Initialize Preview use case
                 val preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
 
+                // Initialize Barcode Scanning client
                 val scanner = BarcodeScanning.getClient(
                     BarcodeScannerOptions.Builder()
                         .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
                         .build()
                 )
 
+                // Initialize Image Analysis use case
                 val imageAnalysis = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
@@ -193,7 +219,7 @@ fun CameraScanner(onQrCodeScanned: (String) -> Unit) {
         }
     )
 
-    // Overlay
+    // Visual overlay for the scanner UI
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -208,6 +234,12 @@ fun CameraScanner(onQrCodeScanned: (String) -> Unit) {
     }
 }
 
+/**
+ * Visual overlay displaying a target frame and flash toggle button.
+ * 
+ * @param isFlashOn Current state of the camera torch.
+ * @param onFlashToggle Callback to toggle the camera torch.
+ */
 @Composable
 fun ScannerOverlay(isFlashOn: Boolean, onFlashToggle: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -216,17 +248,18 @@ fun ScannerOverlay(isFlashOn: Boolean, onFlashToggle: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Target Frame for scanning
             Box(
                 modifier = Modifier
                     .size(260.dp)
                     .background(Color.Transparent)
             ) {
-                // Corner borders or simple frame
                 androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
                     val strokeWidth = 4.dp.toPx()
                     val cornerLength = 40.dp.toPx()
                     val color = KiwiGreen
                     
+                    // Draw corner markers
                     // Top Left
                     drawLine(color, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(cornerLength, 0f), strokeWidth)
                     drawLine(color, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(0f, cornerLength), strokeWidth)
@@ -260,7 +293,7 @@ fun ScannerOverlay(isFlashOn: Boolean, onFlashToggle: () -> Unit) {
             }
         }
         
-        // Flash toggle button - placed directly in the Box so align works
+        // Flash toggle button
         IconButton(
             onClick = onFlashToggle,
             modifier = Modifier
@@ -277,6 +310,13 @@ fun ScannerOverlay(isFlashOn: Boolean, onFlashToggle: () -> Unit) {
     }
 }
 
+/**
+ * Process a CameraX image proxy and run it through the ML Kit barcode scanner.
+ * 
+ * @param scanner The barcode scanner client.
+ * @param imageProxy The image proxy from CameraX's analyzer.
+ * @param onSuccess Callback with detected barcodes.
+ */
 @OptIn(ExperimentalGetImage::class)
 private fun processImageProxy(
     scanner: com.google.mlkit.vision.barcode.BarcodeScanner,

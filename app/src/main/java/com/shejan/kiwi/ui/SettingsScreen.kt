@@ -41,13 +41,15 @@ import com.shejan.kiwi.ui.theme.AshGrey
 import com.shejan.kiwi.ui.theme.DarkGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
 
-// --- Data Models & Constants ---
-
+/**
+ * Data model for a single setting entry.
+ */
 data class SettingsItemData(
     val title: String,
     val icon: ImageVector
 )
 
+// Predefined lists for settings categories
 val supportItems = listOf(
     SettingsItemData("Rate Us", Icons.Default.Star),
     SettingsItemData("Share App", Icons.Default.Share),
@@ -59,8 +61,9 @@ val aboutItems = listOf(
     SettingsItemData("Version Info", Icons.Default.Info)
 )
 
-// --- Helper Composables ---
-
+/**
+ * A header text for a group of settings.
+ */
 @Composable
 fun SectionHeader(title: String) {
     Text(
@@ -72,6 +75,12 @@ fun SectionHeader(title: String) {
     )
 }
 
+/**
+ * A interactive row representing a single setting item.
+ * 
+ * @param item The data for the item.
+ * @param onClick Callback when the item is clicked.
+ */
 @Composable
 fun SettingsItem(item: SettingsItemData, onClick: () -> Unit = {}) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -111,45 +120,11 @@ fun SettingsItem(item: SettingsItemData, onClick: () -> Unit = {}) {
     }
 }
 
-@Composable
-fun SocialIconButton(iconRes: Int, label: String, useTint: Boolean = true, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onClick() }
-            .padding(8.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(52.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(AshGrey),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = androidx.compose.ui.res.painterResource(id = iconRes),
-                contentDescription = label,
-                tint = if (useTint) Color.White else Color.Unspecified,
-                modifier = Modifier.size(28.dp)
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = label,
-            color = Color.White.copy(alpha = 0.7f),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-// --- Dialog Functions ---
-
+/**
+ * Dialog displaying app version and build information.
+ * 
+ * @param onDismiss Callback when the dialog is closed.
+ */
 @Composable
 fun VersionDialog(onDismiss: () -> Unit) {
     val view = LocalView.current
@@ -170,7 +145,7 @@ fun VersionDialog(onDismiss: () -> Unit) {
                 .padding(top = 40.dp, bottom = 32.dp, start = 24.dp, end = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Stylized Icon Container
+            // App Icon Container
             Box(
                 modifier = Modifier
                     .size(90.dp)
@@ -204,7 +179,7 @@ fun VersionDialog(onDismiss: () -> Unit) {
             
             Spacer(modifier = Modifier.height(20.dp))
             
-            // Status Badge
+            // Version Status Badge
             Surface(
                 color = KiwiGreen.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(8.dp)
@@ -231,9 +206,7 @@ fun VersionDialog(onDismiss: () -> Unit) {
             }
             
             Spacer(modifier = Modifier.height(32.dp))
-            
             Divider(color = Color.White.copy(alpha = 0.05f), thickness = 1.dp)
-            
             Spacer(modifier = Modifier.height(24.dp))
             
             Text(
@@ -244,7 +217,6 @@ fun VersionDialog(onDismiss: () -> Unit) {
             )
         }
 
-        // Close Button
         IconButton(
             onClick = onDismiss,
             modifier = Modifier
@@ -262,6 +234,11 @@ fun VersionDialog(onDismiss: () -> Unit) {
     }
 }
 
+/**
+ * Profile card displaying developer information and social links.
+ * 
+ * @param onDismiss Callback when the dialog is closed.
+ */
 @Composable
 fun DeveloperProfileCard(onDismiss: () -> Unit) {
     val context = LocalContext.current
@@ -284,7 +261,7 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
                 .padding(top = 40.dp, bottom = 32.dp, start = 24.dp, end = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Profile Visual (Initials with Gradient)
+            // Developer Initials with Gradient
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -322,7 +299,7 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Developer Badge
+            // Developer Role Badge
             Surface(
                 color = KiwiGreen.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(8.dp)
@@ -349,7 +326,7 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
             
             Spacer(modifier = Modifier.height(20.dp))
             
-            // Social Links Grid
+            // Grid of Social Link Icons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -390,7 +367,6 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
             }
         }
 
-        // Close Button
         IconButton(
             onClick = onDismiss,
             modifier = Modifier
@@ -408,6 +384,12 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
     }
 }
 
+/**
+ * A clickable button for a social link icon.
+ * 
+ * @param iconRes The drawable resource ID for the icon.
+ * @param onClick Callback when the icon is clicked.
+ */
 @Composable
 fun SocialLink(iconRes: Int, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -431,9 +413,10 @@ fun SocialLink(iconRes: Int, onClick: () -> Unit) {
     }
 }
 
-// --- Main Screen ---
-
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * The Settings Screen of the Kiwi app.
+ * Provides access to support actions, privacy policy, and developer information.
+ */
 @Composable
 fun SettingsScreen() {
     val context = LocalContext.current
@@ -442,9 +425,11 @@ fun SettingsScreen() {
     val isDialogShowing = showVersionDialog || showDeveloperDialog
     val scrimAlpha by animateFloatAsState(
         targetValue = if (isDialogShowing) 0.6f else 0f,
-        animationSpec = tween(durationMillis = 300)
+        animationSpec = tween(durationMillis = 300),
+        label = "scrimAlpha"
     )
 
+    // Dialog for Version Info
     if (showVersionDialog) {
         Dialog(
             onDismissRequest = { showVersionDialog = false },
@@ -454,6 +439,7 @@ fun SettingsScreen() {
         }
     }
 
+    // Dialog for Developer Profile
     if (showDeveloperDialog) {
         Dialog(
             onDismissRequest = { showDeveloperDialog = false },
@@ -464,7 +450,6 @@ fun SettingsScreen() {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -472,7 +457,7 @@ fun SettingsScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(top = 24.dp, bottom = 100.dp)
         ) {
-            // Scrollable header card
+            // Header card
             item {
                 Box(
                     modifier = Modifier
@@ -491,6 +476,7 @@ fun SettingsScreen() {
                 }
             }
 
+            // Support Section
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SectionHeader("Support")
@@ -509,6 +495,7 @@ fun SettingsScreen() {
                 })
             }
 
+            // About Section
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 SectionHeader("About")
@@ -522,6 +509,7 @@ fun SettingsScreen() {
                 })
             }
 
+            // Version Footer
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -541,7 +529,7 @@ fun SettingsScreen() {
             }
         }
 
-        // Dark scrim overlay when dialog is showing
+        // Dark scrim overlay for dialog focus
         if (scrimAlpha > 0f) {
             Box(
                 modifier = Modifier

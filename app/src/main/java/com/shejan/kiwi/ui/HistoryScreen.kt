@@ -41,6 +41,12 @@ import com.shejan.kiwi.util.FileHelper
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * The History Screen displaying a list of previously generated and scanned QR codes.
+ * Allows users to view details, open links, share/save QRs, and delete entries.
+ * 
+ * @param viewModel The [HistoryViewModel] providing state and logic.
+ */
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     val historyItems by viewModel.allHistory.collectAsState(initial = emptyList())
@@ -57,7 +63,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
     val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "scale")
 
     if (historyItems.isEmpty()) {
-        // Empty state — header + centered message
+        // Empty state UI when no history exists
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -67,43 +73,10 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
             contentPadding = PaddingValues(top = 24.dp, bottom = 100.dp)
         ) {
             item {
-                // Header card
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(DarkGrey)
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "History",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = KiwiGreen
-                    )
-                }
+                HeaderCard()
             }
             item {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = null,
-                            tint = Color.Gray.copy(alpha = 0.3f),
-                            modifier = Modifier.size(80.dp)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "History is empty",
-                            color = Color.Gray.copy(alpha = 0.5f),
-                            fontSize = 16.sp
-                        )
-                    }
-                }
+                EmptyHistoryPlaceholder()
             }
         }
     } else {
@@ -115,44 +88,12 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(top = 24.dp, bottom = 100.dp)
         ) {
-            // Header card with Delete All button
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(DarkGrey)
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "History",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = KiwiGreen
-                    )
-                    Box(
-                        modifier = Modifier
-                            .graphicsLayer {
-                                scaleX = scale
-                                scaleY = scale
-                            }
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White)
-                            .clickable(
-                                interactionSource = interactionSource,
-                                indication = null
-                            ) { showDeleteDialog = true }
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text(
-                            text = "Delete All",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
+                HistoryHeader(
+                    scale = scale,
+                    interactionSource = interactionSource,
+                    onDeleteAllClick = { showDeleteDialog = true }
+                )
             }
 
             items(historyItems) { item ->
@@ -170,237 +111,376 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
     }
 
     if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete entire history?") },
-            text = { Text("Are you sure you want to delete entire history?") },
-            confirmButton = {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(KiwiGreen)
-                        .clickable {
-                            viewModel.clearAll()
-                            showDeleteDialog = false
-                        }
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "Sure",
-                        color = Color.Black,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
+        DeleteAllConfirmationDialog(
+            onConfirm = {
+                viewModel.clearAll()
+                showDeleteDialog = false
             },
-            dismissButton = {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFF5252))
-                        .clickable { showDeleteDialog = false },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Cancel",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            },
-            containerColor = DarkGrey,
-            titleContentColor = Color.White,
-            textContentColor = Color.Gray
+            onDismiss = { showDeleteDialog = false }
         )
     }
 
     if (showDetailsDialog && selectedItem != null) {
-        val deleteInteractionSource = remember { MutableInteractionSource() }
-        val isDeletePressed by deleteInteractionSource.collectIsPressedAsState()
-        val deleteScale by animateFloatAsState(if (isDeletePressed) 0.95f else 1f, label = "deleteScale")
+        HistoryDetailsDialog(
+            item = selectedItem!!,
+            dateFormatter = dateFormatter,
+            timeFormatter = timeFormatter,
+            onDelete = {
+                viewModel.deleteItem(selectedItem!!)
+                showDetailsDialog = false
+            },
+            onDismiss = { showDetailsDialog = false }
+        )
+    }
+}
 
-        val linkInteractionSource = remember { MutableInteractionSource() }
-        val isLinkPressed by linkInteractionSource.collectIsPressedAsState()
-        val linkScale by animateFloatAsState(if (isLinkPressed) 0.95f else 1f, label = "linkScale")
+/**
+ * A reusable header card for the history screen.
+ */
+@Composable
+private fun HeaderCard() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(DarkGrey)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "History",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = KiwiGreen
+        )
+    }
+}
 
-        AlertDialog(
-            onDismissRequest = { showDetailsDialog = false },
-            title = {
+/**
+ * Placeholder UI shown when the history database is empty.
+ */
+@Composable
+private fun EmptyHistoryPlaceholder() {
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.Default.History,
+                contentDescription = null,
+                tint = Color.Gray.copy(alpha = 0.3f),
+                modifier = Modifier.size(80.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "History is empty",
+                color = Color.Gray.copy(alpha = 0.5f),
+                fontSize = 16.sp
+            )
+        }
+    }
+}
+
+/**
+ * Header section for the history list with a "Delete All" action.
+ * 
+ * @param scale The current animation scale for interaction.
+ * @param interactionSource Interaction source for the delete button.
+ * @param onDeleteAllClick Callback when "Delete All" is pressed.
+ */
+@Composable
+private fun HistoryHeader(
+    scale: Float,
+    interactionSource: MutableInteractionSource,
+    onDeleteAllClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(DarkGrey)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "History",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = KiwiGreen
+        )
+        Box(
+            modifier = Modifier
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.White)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) { onDeleteAllClick() }
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = "Delete All",
+                color = Color.Black,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+/**
+ * Dialog for confirming the deletion of all history entries.
+ * 
+ * @param onConfirm Callback when user confirms deletion.
+ * @param onDismiss Callback when user cancels or dismisses the dialog.
+ */
+@Composable
+private fun DeleteAllConfirmationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete entire history?") },
+        text = { Text("Are you sure you want to delete entire history?") },
+        confirmButton = {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(KiwiGreen)
+                    .clickable { onConfirm() }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = "Sure",
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            }
+        },
+        dismissButton = {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFFF5252))
+                    .clickable { onDismiss() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Cancel",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        },
+        containerColor = DarkGrey,
+        titleContentColor = Color.White,
+        textContentColor = Color.Gray
+    )
+}
+
+/**
+ * Detailed view dialog for a selected history item.
+ * Displays the QR code and provides options to share, save, or delete.
+ * 
+ * @param item The selected [HistoryItem].
+ * @param dateFormatter Formatter for the creation date.
+ * @param timeFormatter Formatter for the creation time.
+ * @param onDelete Callback when the item is deleted.
+ * @param onDismiss Callback when the dialog is dismissed.
+ */
+@Composable
+private fun HistoryDetailsDialog(
+    item: HistoryItem,
+    dateFormatter: SimpleDateFormat,
+    timeFormatter: SimpleDateFormat,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val deleteInteractionSource = remember { MutableInteractionSource() }
+    val isDeletePressed by deleteInteractionSource.collectIsPressedAsState()
+    val deleteScale by animateFloatAsState(if (isDeletePressed) 0.95f else 1f, label = "deleteScale")
+
+    val linkInteractionSource = remember { MutableInteractionSource() }
+    val isLinkPressed by linkInteractionSource.collectIsPressedAsState()
+    val linkScale by animateFloatAsState(if (isLinkPressed) 0.95f else 1f, label = "linkScale")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "History Details",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFF5252))
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val qrBitmap = remember(item) {
+                    QrGenerator.generate(item.url, 400)
+                }
+                
+                 qrBitmap?.let { bit ->
+                    Image(
+                        bitmap = bit.asImageBitmap(),
+                        contentDescription = "QR Code",
+                        modifier = Modifier
+                            .size(200.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable {
+                                val success = FileHelper.saveToGallery(
+                                    context,
+                                    bit,
+                                    "Kiwi_QR_${System.currentTimeMillis()}"
+                                )
+                                if (success) {
+                                    Toast.makeText(context, "Saved to Gallery", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                            .background(Color.White)
+                            .padding(12.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = item.url,
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+                ) {
+                    Text(
+                        text = dateFormatter.format(Date(item.timestamp)),
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                    Text(text = "•", color = Color.Gray, fontSize = 14.sp)
+                    Text(
+                        text = timeFormatter.format(Date(item.timestamp)),
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "History Details",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    
+                    // Delete Button
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFFF5252))
-                            .clickable { showDetailsDialog = false },
-                        contentAlignment = Alignment.Center
+                            .graphicsLayer {
+                                scaleX = deleteScale
+                                scaleY = deleteScale
+                            }
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White)
+                            .clickable(
+                                interactionSource = deleteInteractionSource,
+                                indication = null
+                            ) { onDelete() }
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-            },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    val qrBitmap = remember(selectedItem) {
-                        QrGenerator.generate(selectedItem!!.url, 400)
-                    }
-                    
-                     qrBitmap?.let { bit ->
-                        Image(
-                            bitmap = bit.asImageBitmap(),
-                            contentDescription = "QR Code",
-                            modifier = Modifier
-                                .size(200.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .clickable {
-                                    val success = FileHelper.saveToGallery(
-                                        context,
-                                        bit,
-                                        "Kiwi_QR_${System.currentTimeMillis()}"
-                                    )
-                                    if (success) {
-                                        Toast.makeText(context, "Saved to Gallery", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                                .background(Color.White)
-                                .padding(12.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Text(
-                        text = selectedItem!!.url,
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
-                    ) {
-                        // Date Text
                         Text(
-                            text = dateFormatter.format(Date(selectedItem!!.timestamp)),
-                            color = Color.Gray,
-                            fontSize = 14.sp
-                        )
-
-                        // Separator
-                        Text(
-                            text = "•",
-                            color = Color.Gray,
-                            fontSize = 14.sp
-                        )
-
-                        // Time Text
-                        Text(
-                            text = timeFormatter.format(Date(selectedItem!!.timestamp)),
-                            color = Color.Gray,
+                            text = "Delete",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
                     }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Delete Button
+
+                    // Open Link Button (HTTP/HTTPS only)
+                    if (item.url.startsWith("http://") || item.url.startsWith("https://")) {
                         Box(
                             modifier = Modifier
                                 .graphicsLayer {
-                                    scaleX = deleteScale
-                                    scaleY = deleteScale
+                                    scaleX = linkScale
+                                    scaleY = linkScale
                                 }
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(Color.White)
                                 .clickable(
-                                    interactionSource = deleteInteractionSource,
+                                    interactionSource = linkInteractionSource,
                                     indication = null
                                 ) {
-                                    viewModel.deleteItem(selectedItem!!)
-                                    showDetailsDialog = false
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
+                                    context.startActivity(intent)
                                 }
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             Text(
-                                text = "Delete",
+                                text = "Go to Link",
                                 color = Color.Black,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )
                         }
-
-                        // Go to Link Button — only show for URLs
-                        if (selectedItem!!.url.startsWith("http://") || selectedItem!!.url.startsWith("https://")) {
-                            Box(
-                                modifier = Modifier
-                                    .graphicsLayer {
-                                        scaleX = linkScale
-                                        scaleY = linkScale
-                                    }
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color.White)
-                                    .clickable(
-                                        interactionSource = linkInteractionSource,
-                                        indication = null
-                                    ) {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(selectedItem!!.url))
-                                        context.startActivity(intent)
-                                    }
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                            ) {
-                                Text(
-                                    text = "Go to Link",
-                                    color = Color.Black,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
-                                )
-                            }
-                        }
                     }
                 }
-            },
-            confirmButton = {
-                // Confirm button is now in the text slot for central placement
-                Spacer(modifier = Modifier.height(1.dp))
-            },
-            dismissButton = null,
-            containerColor = DarkGrey
-        )
-    }
+            }
+        },
+        confirmButton = {
+            Spacer(modifier = Modifier.height(1.dp))
+        },
+        dismissButton = null,
+        containerColor = DarkGrey
+    )
 }
 
+/**
+ * A card representing a single history entry in the list.
+ * 
+ * @param item The [HistoryItem] to display.
+ * @param date Formatted date string.
+ * @param onDelete Callback when the delete icon is pressed.
+ * @param onClick Callback when the card is clicked.
+ */
 @Composable
 fun HistoryCard(item: HistoryItem, date: String, onDelete: () -> Unit, onClick: () -> Unit) {
     val isScanned = item.type == "scanned"
@@ -417,6 +497,7 @@ fun HistoryCard(item: HistoryItem, date: String, onDelete: () -> Unit, onClick: 
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Icon representing the entry type (Scanned vs Generated)
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -455,7 +536,7 @@ fun HistoryCard(item: HistoryItem, date: String, onDelete: () -> Unit, onClick: 
                     Text(text = "•", color = Color.Gray.copy(alpha = 0.3f), fontSize = 12.sp)
                     Spacer(modifier = Modifier.width(8.dp))
                     
-                    // Type badge — standardized colors
+                    // Type badge
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
