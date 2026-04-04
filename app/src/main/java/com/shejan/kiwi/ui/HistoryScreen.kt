@@ -110,6 +110,9 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
         }
     }
 
+    // State for the renaming flow
+    var showRenameDialog by remember { mutableStateOf(false) }
+
     if (showDeleteDialog) {
         DeleteAllConfirmationDialog(
             onConfirm = {
@@ -129,7 +132,26 @@ fun HistoryScreen(viewModel: HistoryViewModel = androidx.lifecycle.viewmodel.com
                 viewModel.deleteItem(selectedItem!!)
                 showDetailsDialog = false
             },
+            onRenameRequest = {
+                showRenameDialog = true
+            },
             onDismiss = { showDetailsDialog = false }
+        )
+    }
+
+    if (showRenameDialog && selectedItem != null) {
+        RenameDialog(
+            currentName = selectedItem!!.label ?: "",
+            onConfirm = { newName ->
+                val updatedItem = selectedItem!!.copy(
+                    label = newName,
+                    timestamp = System.currentTimeMillis()
+                )
+                viewModel.updateItem(selectedItem!!, newName)
+                selectedItem = updatedItem // Update selectedItem to reflect changes in details dialog
+                showRenameDialog = false
+            },
+            onDismiss = { showRenameDialog = false }
         )
     }
 }
@@ -285,13 +307,67 @@ private fun DeleteAllConfirmationDialog(onConfirm: () -> Unit, onDismiss: () -> 
 }
 
 /**
+ * Dialog for renaming a history item (setting a custom name/label).
+ * 
+ * @param currentName The current custom name/label to be edited.
+ * @param onConfirm Callback with the new name string.
+ * @param onDismiss Callback when the dialog is dismissed.
+ */
+@Composable
+private fun RenameDialog(
+    currentName: String,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var textInput by remember { mutableStateOf(currentName) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Set Name", color = Color.White) },
+        text = {
+            OutlinedTextField(
+                value = textInput,
+                onValueChange = { textInput = it },
+                placeholder = { Text("Custom Name (e.g., My Portfolio)", color = Color.Gray) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = KiwiGreen,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+        },
+        confirmButton = {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(KiwiGreen)
+                    .clickable { onConfirm(textInput) }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text("Save", color = AmoledBlack, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = Color.Gray)
+            }
+        },
+        containerColor = DarkGrey
+    )
+}
+
+/**
  * Detailed view dialog for a selected history item.
- * Displays the QR code and provides options to share, save, or delete.
+ * Displays the QR code and provides square icon buttons for actions.
  * 
  * @param item The selected [HistoryItem].
  * @param dateFormatter Formatter for the creation date.
  * @param timeFormatter Formatter for the creation time.
  * @param onDelete Callback when the item is deleted.
+ * @param onRenameRequest Callback to trigger the rename dialog.
  * @param onDismiss Callback when the dialog is dismissed.
  */
 @Composable
@@ -300,16 +376,10 @@ private fun HistoryDetailsDialog(
     dateFormatter: SimpleDateFormat,
     timeFormatter: SimpleDateFormat,
     onDelete: () -> Unit,
+    onRenameRequest: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val deleteInteractionSource = remember { MutableInteractionSource() }
-    val isDeletePressed by deleteInteractionSource.collectIsPressedAsState()
-    val deleteScale by animateFloatAsState(if (isDeletePressed) 0.95f else 1f, label = "deleteScale")
-
-    val linkInteractionSource = remember { MutableInteractionSource() }
-    val isLinkPressed by linkInteractionSource.collectIsPressedAsState()
-    val linkScale by animateFloatAsState(if (isLinkPressed) 0.95f else 1f, label = "linkScale")
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -378,10 +448,23 @@ private fun HistoryDetailsDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Display Custom Name (Label) if it exists
+                if (!item.label.isNullOrEmpty()) {
+                    Text(
+                        text = item.label,
+                        color = KiwiGreen,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                }
+
+                // Always display the actual Link Content
                 Text(
                     text = item.url,
-                    color = Color.White,
-                    fontSize = 16.sp,
+                    color = Color.White, // Restored full brightness
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -405,62 +488,34 @@ private fun HistoryDetailsDialog(
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(16.dp))
-                
+                Spacer(modifier = Modifier.height(24.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Delete Button
-                    Box(
-                        modifier = Modifier
-                            .graphicsLayer {
-                                scaleX = deleteScale
-                                scaleY = deleteScale
-                            }
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White)
-                            .clickable(
-                                interactionSource = deleteInteractionSource,
-                                indication = null
-                            ) { onDelete() }
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = "Delete",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    }
+                    SquareIconButton(
+                        iconRes = com.shejan.kiwi.R.drawable.ic_delete_action,
+                        onClick = onDelete
+                    )
+
+                    // Rename Button
+                    SquareIconButton(
+                        iconRes = com.shejan.kiwi.R.drawable.ic_edit_action,
+                        onClick = onRenameRequest
+                    )
 
                     // Open Link Button (HTTP/HTTPS only)
                     if (item.url.startsWith("http://") || item.url.startsWith("https://")) {
-                        Box(
-                            modifier = Modifier
-                                .graphicsLayer {
-                                    scaleX = linkScale
-                                    scaleY = linkScale
-                                }
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White)
-                                .clickable(
-                                    interactionSource = linkInteractionSource,
-                                    indication = null
-                                ) {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
-                                    context.startActivity(intent)
-                                }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = "Go to Link",
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                        }
+                        SquareIconButton(
+                            iconRes = com.shejan.kiwi.R.drawable.ic_open_action,
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
+                                context.startActivity(intent)
+                            }
+                        )
                     }
                 }
             }
@@ -471,6 +526,45 @@ private fun HistoryDetailsDialog(
         dismissButton = null,
         containerColor = DarkGrey
     )
+}
+
+/**
+ * A square, icon-only button used in the history details dialog.
+ * 
+ * @param iconRes The drawable resource ID for the icon.
+ * @param onClick Callback when the button is clicked.
+ */
+@Composable
+private fun SquareIconButton(
+    iconRes: Int,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.92f else 1f, label = "buttonScale")
+
+    Box(
+        modifier = Modifier
+            .size(52.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.White)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = androidx.compose.ui.res.painterResource(id = iconRes),
+            contentDescription = null,
+            tint = AmoledBlack, // Set to AmoledBlack for high contrast on white background
+            modifier = Modifier.size(26.dp)
+        )
+    }
 }
 
 /**
@@ -515,13 +609,25 @@ fun HistoryCard(item: HistoryItem, date: String, onDelete: () -> Unit, onClick: 
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
+                // Show Label if it exists, otherwise show URL
                 Text(
-                    text = item.url,
+                    text = if (!item.label.isNullOrEmpty()) item.label else item.url,
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
                 )
+                
+                // If label exists, show URL as subtext underneath
+                if (!item.label.isNullOrEmpty()) {
+                    Text(
+                        text = item.url,
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
                 
                 Spacer(modifier = Modifier.height(4.dp))
                 

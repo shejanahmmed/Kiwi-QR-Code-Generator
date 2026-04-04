@@ -17,11 +17,21 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
 }
 
 /**
+ * Migration from version 2 to 3 of the [HistoryDatabase].
+ * Adds the 'label' column to the 'history_items' table.
+ */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE history_items ADD COLUMN label TEXT")
+    }
+}
+
+/**
  * The Room database for storing QR code history.
  * This class follows the singleton pattern to ensure only one instance of the 
  * database is opened at a time.
  */
-@Database(entities = [HistoryItem::class], version = 2, exportSchema = false)
+@Database(entities = [HistoryItem::class], version = 3, exportSchema = false)
 abstract class HistoryDatabase : RoomDatabase() {
     /**
      * Provides access to the [HistoryDao] for database operations.
@@ -45,7 +55,7 @@ abstract class HistoryDatabase : RoomDatabase() {
                     context.applicationContext,
                     HistoryDatabase::class.java,
                     "history_database"
-                ).addMigrations(MIGRATION_1_2).build()
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
                 INSTANCE = instance
                 instance
             }

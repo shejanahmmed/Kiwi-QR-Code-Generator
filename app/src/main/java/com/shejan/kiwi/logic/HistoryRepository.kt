@@ -35,6 +35,17 @@ class HistoryRepository(private val historyDao: HistoryDao) {
     }
 
     /**
+     * Updates the custom name (label) of an existing history item.
+     * 
+     * @param item The existing item to update.
+     * @param newLabel The new custom name for the QR code entry.
+     */
+    suspend fun update(item: HistoryItem, newLabel: String) {
+        val updatedItem = item.copy(label = newLabel)
+        historyDao.insert(updatedItem)
+    }
+
+    /**
      * Clears all entries from the history database.
      */
     suspend fun clearAll() {

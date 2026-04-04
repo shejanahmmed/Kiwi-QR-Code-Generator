@@ -51,6 +51,18 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
+     * Updates an existing history item's custom name (label).
+     * 
+     * @param item The existing history item.
+     * @param newLabel The new custom name/label for the item.
+     */
+    fun updateItem(item: HistoryItem, newLabel: String) {
+        viewModelScope.launch {
+            repository.update(item, newLabel)
+        }
+    }
+
+    /**
      * Clears all history entries from the database.
      */
     fun clearAll() {
