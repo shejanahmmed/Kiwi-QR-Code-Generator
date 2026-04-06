@@ -1,8 +1,14 @@
 package com.shejan.kiwi.ui
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -46,6 +52,27 @@ fun HomeScreen(
     var textInput by remember { mutableStateOf("") }
     var qrBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
+
+    val saveQrToGallery = {
+        qrBitmap?.let {
+            val success = FileHelper.saveToGallery(context, it, "Kiwi_QR_${System.currentTimeMillis()}")
+            if (success) {
+                Toast.makeText(context, "Saved to Gallery", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            saveQrToGallery()
+        } else {
+            Toast.makeText(context, "Storage Permission Denied", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // Auto-populate textInput if shared from another app
     LaunchedEffect(initialUrl) {
@@ -189,11 +216,19 @@ fun HomeScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 if (qrBitmap != null) {
-                    val success = FileHelper.saveToGallery(context, qrBitmap!!, "Kiwi_QR_${System.currentTimeMillis()}")
-                    if (success) {
-                        Toast.makeText(context, "Saved to Gallery", Toast.LENGTH_SHORT).show()
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                        val hasPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        ) == PackageManager.PERMISSION_GRANTED
+                        
+                        if (hasPermission) {
+                            saveQrToGallery()
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        }
                     } else {
-                        Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
+                        saveQrToGallery()
                     }
                 } else {
                     Toast.makeText(context, "Please enter a link first", Toast.LENGTH_SHORT).show()

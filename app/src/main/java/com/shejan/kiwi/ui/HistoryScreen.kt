@@ -1,9 +1,15 @@
 package com.shejan.kiwi.ui
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -381,6 +387,31 @@ private fun HistoryDetailsDialog(
 ) {
     val context = LocalContext.current
 
+    val qrBitmap = remember(item) {
+        QrGenerator.generate(item.url, 400)
+    }
+
+    val saveQrToGallery = {
+        qrBitmap?.let { bit ->
+            val success = FileHelper.saveToGallery(context, bit, "Kiwi_QR_${System.currentTimeMillis()}")
+            if (success) {
+                Toast.makeText(context, "Saved to Gallery", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            saveQrToGallery()
+        } else {
+            Toast.makeText(context, "Storage Permission Denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -418,10 +449,6 @@ private fun HistoryDetailsDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val qrBitmap = remember(item) {
-                    QrGenerator.generate(item.url, 400)
-                }
-                
                  qrBitmap?.let { bit ->
                     Image(
                         bitmap = bit.asImageBitmap(),
@@ -430,15 +457,19 @@ private fun HistoryDetailsDialog(
                             .size(200.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .clickable {
-                                val success = FileHelper.saveToGallery(
-                                    context,
-                                    bit,
-                                    "Kiwi_QR_${System.currentTimeMillis()}"
-                                )
-                                if (success) {
-                                    Toast.makeText(context, "Saved to Gallery", Toast.LENGTH_SHORT).show()
+                                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                                    val hasPermission = ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                    
+                                    if (hasPermission) {
+                                        saveQrToGallery()
+                                    } else {
+                                        permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                    }
                                 } else {
-                                    Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
+                                    saveQrToGallery()
                                 }
                             }
                             .background(Color.White)
