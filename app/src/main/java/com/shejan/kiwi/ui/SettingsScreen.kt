@@ -488,8 +488,22 @@ fun SettingsScreen() {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.farjan.me/KIWIPrivecyPolicy/"))
                             context.startActivity(intent)
                         }
-                        "Rate Us", "Share App" -> {
-                            Toast.makeText(context, "Coming Soon", Toast.LENGTH_SHORT).show()
+                        "Rate Us" -> {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}"))
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}"))
+                                context.startActivity(intent)
+                            }
+                        }
+                        "Share App" -> {
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, "Kiwi QR Generator")
+                                putExtra(Intent.EXTRA_TEXT, "Check out Kiwi, a fast and beautiful QR Code Generator & Scanner app! Download it here: https://play.google.com/store/apps/details?id=${context.packageName}")
+                            }
+                            context.startActivity(Intent.createChooser(intent, "Share Kiwi with"))
                         }
                     }
                 })
