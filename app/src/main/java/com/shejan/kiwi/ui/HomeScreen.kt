@@ -81,19 +81,16 @@ fun HomeScreen(
         }
     }
 
-    // Generate QR when text changes
+    // Generate QR and Save to history when text changes, with debounce
     LaunchedEffect(textInput) {
-        qrBitmap = if (textInput.isNotEmpty()) {
-            QrGenerator.generate(textInput, 512)
+        if (textInput.isNotEmpty()) {
+            kotlinx.coroutines.delay(1000) // Wait 1 second after user stops typing
+            qrBitmap = QrGenerator.generate(textInput, 512)
+            if (qrBitmap != null) {
+                viewModel.saveUrl(textInput)
+            }
         } else {
-            null
-        }
-    }
-
-    // Save to history when qrBitmap is generated and textInput is not empty
-    LaunchedEffect(qrBitmap) {
-        if (qrBitmap != null && textInput.isNotEmpty()) {
-            viewModel.saveUrl(textInput)
+            qrBitmap = null
         }
     }
 
