@@ -387,8 +387,10 @@ private fun HistoryDetailsDialog(
 ) {
     val context = LocalContext.current
 
-    val qrBitmap = remember(item) {
-        QrGenerator.generate(item.url, 400)
+    var qrBitmap by remember(item) { mutableStateOf<android.graphics.Bitmap?>(null) }
+
+    androidx.compose.runtime.LaunchedEffect(item) {
+        qrBitmap = QrGenerator.generate(item.url, 400)
     }
 
     val saveQrToGallery = {
