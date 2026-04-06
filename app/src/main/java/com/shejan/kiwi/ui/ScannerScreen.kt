@@ -149,6 +149,12 @@ fun CameraScanner(onQrCodeScanned: (String) -> Unit) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraExecutor: ExecutorService = remember { Executors.newSingleThreadExecutor() }
     
+    DisposableEffect(cameraExecutor) {
+        onDispose {
+            cameraExecutor.shutdown()
+        }
+    }
+    
     // Track last scanned URL and time for debouncing repeated scans
     var lastScannedUrl by remember { mutableStateOf("") }
     var lastScanTime by remember { mutableLongStateOf(0L) }
