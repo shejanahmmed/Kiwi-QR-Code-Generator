@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.ViewGroup
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -17,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -161,6 +163,39 @@ fun CameraScanner(onQrCodeScanned: (String) -> Unit) {
     var isFlashOn by remember { mutableStateOf(false) }
     var cameraControl by remember { mutableStateOf<CameraControl?>(null) }
 
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                try {
+                    val inputImage = InputImage.fromFilePath(context, uri)
+                    val scanner = BarcodeScanning.getClient(
+                        BarcodeScannerOptions.Builder()
+                            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                            .build()
+                    )
+                    scanner.process(inputImage)
+                        .addOnSuccessListener { barcodes ->
+                            if (barcodes.isNotEmpty()) {
+                                barcodes.firstOrNull()?.rawValue?.let { url ->
+                                    onQrCodeScanned(url)
+                                }
+                            } else {
+                                android.widget.Toast.makeText(context, "No QR code found in image", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        .addOnFailureListener {
+                            Log.e("ScannerScreen", "Barcode processing failed", it)
+                            android.widget.Toast.makeText(context, "Failed to analyze image", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                } catch (e: Exception) {
+                    Log.e("ScannerScreen", "Failed to load image", e)
+                    android.widget.Toast.makeText(context, "Failed to load image", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    )
+
     AndroidView(
         factory = { ctx ->
             PreviewView(ctx).apply {
@@ -235,6 +270,11 @@ fun CameraScanner(onQrCodeScanned: (String) -> Unit) {
             onFlashToggle = {
                 isFlashOn = !isFlashOn
                 cameraControl?.enableTorch(isFlashOn)
+            },
+            onGalleryClick = {
+                photoPickerLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
             }
         )
     }
@@ -247,7 +287,7 @@ fun CameraScanner(onQrCodeScanned: (String) -> Unit) {
  * @param onFlashToggle Callback to toggle the camera torch.
  */
 @Composable
-fun ScannerOverlay(isFlashOn: Boolean, onFlashToggle: () -> Unit) {
+fun ScannerOverlay(isFlashOn: Boolean, onFlashToggle: () -> Unit, onGalleryClick: () -> Unit = {}) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -311,6 +351,21 @@ fun ScannerOverlay(isFlashOn: Boolean, onFlashToggle: () -> Unit) {
                 imageVector = if (isFlashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
                 contentDescription = "Toggle Flash",
                 tint = if (isFlashOn) KiwiGreen else Color.White
+            )
+        }
+        
+        // Gallery button
+        IconButton(
+            onClick = onGalleryClick,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(top = 48.dp, start = 24.dp)
+                .background(DarkGrey.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+        ) {
+            Icon(
+                imageVector = Icons.Default.Image,
+                contentDescription = "Pick Image from Gallery",
+                tint = Color.White
             )
         }
     }
