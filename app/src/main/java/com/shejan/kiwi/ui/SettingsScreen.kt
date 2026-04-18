@@ -67,56 +67,78 @@ val aboutItems = listOf(
 @Composable
 fun SectionHeader(title: String) {
     Text(
-        text = title,
+        text = title.uppercase(),
         color = KiwiGreen,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(bottom = 8.dp)
+        fontSize = 13.sp,
+        fontWeight = FontWeight.ExtraBold,
+        letterSpacing = 1.sp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, bottom = 8.dp, top = 8.dp)
     )
 }
 
 /**
- * A interactive row representing a single setting item.
+ * A interactive row representing a single setting item within a grouped card.
  * 
  * @param item The data for the item.
+ * @param isLastItem Whether this is the last item in the group (hides the divider).
  * @param onClick Callback when the item is clicked.
  */
 @Composable
-fun SettingsItem(item: SettingsItemData, onClick: () -> Unit = {}) {
-    val interactionSource = remember { MutableInteractionSource() }
-    Row(
+fun SettingsItem(
+    item: SettingsItemData,
+    isLastItem: Boolean = false,
+    onClick: () -> Unit = {}
+) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(AshGrey)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onClick() }
-            .padding(horizontal = 20.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clickable { onClick() }
     ) {
-        Icon(
-            imageVector = item.icon,
-            contentDescription = item.title,
-            tint = Color.White,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = item.title,
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f)
-        )
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = Color.White.copy(alpha = 0.3f),
-            modifier = Modifier.size(20.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Styled Icon Container
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.White.copy(alpha = 0.05f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = item.icon,
+                    contentDescription = item.title,
+                    tint = KiwiGreen,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = item.title,
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.3f),
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        if (!isLastItem) {
+            Divider(
+                modifier = Modifier.padding(start = 70.dp, end = 16.dp),
+                color = Color.White.copy(alpha = 0.05f),
+                thickness = 1.dp
+            )
+        }
     }
 }
 
@@ -457,70 +479,86 @@ fun SettingsScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(top = 24.dp, bottom = 100.dp)
         ) {
-            // Header card
+            // Header Text
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(DarkGrey)
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Settings",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = KiwiGreen
-                    )
+                Text(
+                    text = "Settings",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 4.dp, top = 8.dp)
+                )
+            }
+
+            // Support Section Group
+            item {
+                Column {
+                    SectionHeader("Support")
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(AshGrey)
+                    ) {
+                        supportItems.forEachIndexed { index, item ->
+                            SettingsItem(
+                                item = item,
+                                isLastItem = index == supportItems.size - 1,
+                                onClick = {
+                                    when (item.title) {
+                                        "Privacy Policy" -> {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.farjan.me/KIWIPrivecyPolicy/"))
+                                            context.startActivity(intent)
+                                        }
+                                        "Rate Us" -> {
+                                            try {
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}"))
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}"))
+                                                context.startActivity(intent)
+                                            }
+                                        }
+                                        "Share App" -> {
+                                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(Intent.EXTRA_SUBJECT, "Kiwi QR Generator")
+                                                putExtra(Intent.EXTRA_TEXT, "Check out Kiwi, a fast and beautiful QR Code Generator & Scanner app! Download it here: https://play.google.com/store/apps/details?id=${context.packageName}")
+                                            }
+                                            context.startActivity(Intent.createChooser(intent, "Share Kiwi with"))
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
-            // Support Section
+            // About Section Group
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                SectionHeader("Support")
-            }
-            items(supportItems) { item ->
-                SettingsItem(item, onClick = {
-                    when (item.title) {
-                        "Privacy Policy" -> {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.farjan.me/KIWIPrivecyPolicy/"))
-                            context.startActivity(intent)
-                        }
-                        "Rate Us" -> {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}"))
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}"))
-                                context.startActivity(intent)
-                            }
-                        }
-                        "Share App" -> {
-                            val intent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_SUBJECT, "Kiwi QR Generator")
-                                putExtra(Intent.EXTRA_TEXT, "Check out Kiwi, a fast and beautiful QR Code Generator & Scanner app! Download it here: https://play.google.com/store/apps/details?id=${context.packageName}")
-                            }
-                            context.startActivity(Intent.createChooser(intent, "Share Kiwi with"))
+                Column {
+                    SectionHeader("About")
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(AshGrey)
+                    ) {
+                        aboutItems.forEachIndexed { index, item ->
+                            SettingsItem(
+                                item = item,
+                                isLastItem = index == aboutItems.size - 1,
+                                onClick = {
+                                    when (item.title) {
+                                        "About Developer" -> showDeveloperDialog = true
+                                        "Version Info" -> showVersionDialog = true
+                                    }
+                                }
+                            )
                         }
                     }
-                })
-            }
-
-            // About Section
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                SectionHeader("About")
-            }
-            items(aboutItems) { item ->
-                SettingsItem(item, onClick = {
-                    when (item.title) {
-                        "About Developer" -> showDeveloperDialog = true
-                        "Version Info" -> showVersionDialog = true
-                    }
-                })
+                }
             }
 
             // Version Footer
