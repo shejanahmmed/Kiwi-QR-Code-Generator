@@ -8,15 +8,21 @@ import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
 import androidx.core.content.ContextCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,6 +42,7 @@ import com.shejan.kiwi.ui.theme.DarkGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
 import com.shejan.kiwi.util.FileHelper
 import com.shejan.kiwi.ui.HistoryViewModel
+import kotlinx.coroutines.delay
 
 /**
  * The Home Screen of the Kiwi app.
@@ -84,9 +91,10 @@ fun HomeScreen(
     // Generate QR and Save to history when text changes, with debounce
     LaunchedEffect(textInput) {
         if (textInput.isNotEmpty()) {
-            kotlinx.coroutines.delay(1000) // Wait 1 second after user stops typing
-            qrBitmap = QrGenerator.generate(textInput, 512)
-            if (qrBitmap != null) {
+            delay(800) // Wait 0.8s after user stops typing
+            val newBitmap = QrGenerator.generate(textInput, 512)
+            if (newBitmap != null) {
+                qrBitmap = newBitmap
                 viewModel.saveUrl(textInput)
             }
         } else {
@@ -97,94 +105,116 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(AmoledBlack)
             .padding(horizontal = 24.dp)
-            .padding(top = 24.dp, bottom = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(top = 48.dp, bottom = 12.dp),
+        horizontalAlignment = Alignment.Start
     ) {
-        // App Title
+        // App Title / Header (Left-aligned, modern typography)
         Text(
-            text = "Kiwi",
-            fontSize = 32.sp,
+            text = "Create Your",
+            fontSize = 36.sp,
+            fontWeight = FontWeight.Light,
+            color = Color.White
+        )
+        Text(
+            text = "QR Code",
+            fontSize = 36.sp,
             fontWeight = FontWeight.ExtraBold,
-            color = KiwiGreen,
-            modifier = Modifier.padding(top = 16.dp)
+            color = KiwiGreen
         )
 
-        // QR Code Display Area
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Center Box for QR Code
         Box(
-            modifier = Modifier
-                .size(280.dp)
-                .clip(RoundedCornerShape(32.dp))
-                .background(DarkGrey)
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            if (qrBitmap == null) {
-                // Placeholder UI when no QR is generated
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.QrCode,
-                        contentDescription = null,
-                        tint = Color.Gray.copy(alpha = 0.3f),
-                        modifier = Modifier.size(80.dp)
+            // QR Code Display Area
+            Box(
+                modifier = Modifier
+                    .size(280.dp)
+                    .clip(RoundedCornerShape(32.dp))
+                    .background(DarkGrey)
+                    .border(
+                        width = if (qrBitmap != null) 2.dp else 0.dp,
+                        color = if (qrBitmap != null) KiwiGreen.copy(alpha = 0.5f) else Color.Transparent,
+                        shape = RoundedCornerShape(32.dp)
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Enter text to generate QR",
-                        color = Color.Gray.copy(alpha = 0.5f),
-                        fontSize = 14.sp
-                    )
-                }
-            } else {
-                // Display the generated QR bitmap
-                qrBitmap?.let {
-                    Image(
-                        bitmap = it.asImageBitmap(),
-                        contentDescription = "Generated QR Code",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(16.dp))
-                    )
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.animation.Crossfade(
+                    targetState = qrBitmap != null,
+                    label = "qr_crossfade",
+                    animationSpec = tween(500)
+                ) { isQrGenerated ->
+                    if (!isQrGenerated) {
+                        // Placeholder UI
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.QrCodeScanner,
+                                contentDescription = null,
+                                tint = Color.Gray.copy(alpha = 0.3f),
+                                modifier = Modifier.size(80.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Awaiting input...",
+                                color = Color.Gray.copy(alpha = 0.5f),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    } else {
+                        // QR Code Image
+                        qrBitmap?.let { bitmap ->
+                            Image(
+                                bitmap = bitmap.asImageBitmap(),
+                                contentDescription = "Generated QR Code",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(16.dp))
+                            )
+                        }
+                    }
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         // Input Field for URL/Text
         OutlinedTextField(
             value = textInput,
             onValueChange = { textInput = it },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Paste link here...", color = Color.Gray) },
+            placeholder = { Text("Enter link or text...", color = Color.Gray) },
             trailingIcon = {
                 if (textInput.isEmpty()) {
-                    // Paste from clipboard button
-                    TextButton(
-                        modifier = Modifier.padding(end = 8.dp),
-                        onClick = {
-                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                            val item = clipboard.primaryClip?.getItemAt(0)
-                            val pasteData = item?.text
-                            if (pasteData != null) {
-                                textInput = pasteData.toString()
-                            } else {
-                                Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        colors = ButtonDefaults.textButtonColors(contentColor = KiwiGreen)
-                    ) {
-                        Text("Paste", fontWeight = FontWeight.Bold)
+                    IconButton(onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        val item = clipboard.primaryClip?.getItemAt(0)
+                        val pasteData = item?.text
+                        if (pasteData != null) {
+                            textInput = pasteData.toString()
+                        } else {
+                            Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.ContentPaste,
+                            contentDescription = "Paste",
+                            tint = KiwiGreen
+                        )
                     }
                 } else {
-                    // Clear input button
-                    IconButton(
-                        onClick = { textInput = "" },
-                        modifier = Modifier.padding(end = 4.dp)
-                    ) {
+                    IconButton(onClick = { textInput = "" }) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Clear",
-                            tint = KiwiGreen
+                            tint = Color.Gray
                         )
                     }
                 }
@@ -193,7 +223,7 @@ fun HomeScreen(
             shape = RoundedCornerShape(20.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = KiwiGreen,
-                unfocusedBorderColor = DarkGrey,
+                unfocusedBorderColor = Color.Transparent,
                 focusedContainerColor = DarkGrey,
                 unfocusedContainerColor = DarkGrey,
                 cursorColor = KiwiGreen,
@@ -202,44 +232,47 @@ fun HomeScreen(
             )
         )
 
+        Spacer(modifier = Modifier.height(24.dp))
+
         // Action Buttons: Save and Share
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Save Button (Primary)
             ActionButton(
                 icon = Icons.Default.Download,
                 label = "Save",
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                isPrimary = true,
+                enabled = qrBitmap != null
             ) {
-                if (qrBitmap != null) {
-                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-                        val hasPermission = ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE
-                        ) == PackageManager.PERMISSION_GRANTED
-                        
-                        if (hasPermission) {
-                            saveQrToGallery()
-                        } else {
-                            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        }
-                    } else {
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                    val hasPermission = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ) == PackageManager.PERMISSION_GRANTED
+                    
+                    if (hasPermission) {
                         saveQrToGallery()
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     }
                 } else {
-                    Toast.makeText(context, "Please enter a link first", Toast.LENGTH_SHORT).show()
+                    saveQrToGallery()
                 }
             }
+            
+            // Share Button (Secondary)
             ActionButton(
                 icon = Icons.Default.Share,
                 label = "Share",
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                isPrimary = false,
+                enabled = qrBitmap != null
             ) {
-                if (qrBitmap != null) {
-                    FileHelper.shareImage(context, qrBitmap!!, "Kiwi_QR_Share")
-                } else {
-                    Toast.makeText(context, "Please enter a link first", Toast.LENGTH_SHORT).show()
+                qrBitmap?.let { bitmap ->
+                    FileHelper.shareImage(context, bitmap, "Kiwi_QR_Share")
                 }
             }
         }
@@ -249,11 +282,12 @@ fun HomeScreen(
 }
 
 /**
- * A customized button for primary actions on the Home Screen.
+ * A customized button for actions on the Home Screen.
  * 
  * @param icon The vector icon to display on the button.
  * @param label The text label for the button.
  * @param modifier Modifier for layout customization.
+ * @param isPrimary Whether this is a primary highlighted button.
  * @param enabled Whether the button is interactive.
  * @param onClick Callback when the button is clicked.
  */
@@ -262,23 +296,25 @@ fun ActionButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     modifier: Modifier = Modifier,
+    isPrimary: Boolean = true,
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.height(60.dp),
+        modifier = modifier.height(56.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = AshGrey,
-            contentColor = Color.White,
-            disabledContainerColor = AshGrey.copy(alpha = 0.6f),
-            disabledContentColor = Color.White
+            containerColor = if (isPrimary) KiwiGreen else AshGrey,
+            contentColor = if (isPrimary) AmoledBlack else Color.White,
+            disabledContainerColor = DarkGrey.copy(alpha = 0.5f),
+            disabledContentColor = Color.Gray
         ),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = if (isPrimary) ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 2.dp) else null
     ) {
         Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(20.dp))
-        Spacer(modifier = Modifier.width(10.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Text(text = label, fontWeight = FontWeight.Bold, fontSize = 16.sp)
     }
 }
