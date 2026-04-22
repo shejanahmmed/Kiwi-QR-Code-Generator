@@ -50,6 +50,10 @@ data class SettingsItemData(
 )
 
 // Predefined lists for settings categories
+val appearanceItems = listOf(
+    SettingsItemData("App Theme", Icons.Default.Palette)
+)
+
 val supportItems = listOf(
     SettingsItemData("Rate Us", Icons.Default.Star),
     SettingsItemData("Share App", Icons.Default.Share),
@@ -436,20 +440,122 @@ fun SocialLink(iconRes: Int, onClick: () -> Unit) {
 }
 
 /**
+ * Dialog displaying theme selection options.
+ *
+ * @param onDismiss Callback when the dialog is closed.
+ */
+@Composable
+fun ThemeSelectionDialog(onDismiss: () -> Unit) {
+    val view = LocalView.current
+    SideEffect {
+        (view.parent as? DialogWindowProvider)?.window
+            ?.setBackgroundDrawableResource(android.R.color.transparent)
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(0.85f)
+            .clip(RoundedCornerShape(32.dp))
+            .background(DarkGrey)
+            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(32.dp))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 32.dp, bottom = 24.dp, start = 16.dp, end = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Select Theme",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Options
+            ThemeOptionItem(title = "System Default", icon = Icons.Default.Settings, onClick = { onDismiss() })
+            ThemeOptionItem(title = "Light Mode", icon = Icons.Default.WbSunny, onClick = { onDismiss() })
+            ThemeOptionItem(title = "Dark Mode", icon = Icons.Default.NightlightRound, onClick = { onDismiss() })
+        }
+
+        IconButton(
+            onClick = onDismiss,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(12.dp)
+                .background(Color.White.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close",
+                tint = Color.White.copy(alpha = 0.7f),
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun ThemeOptionItem(title: String, icon: ImageVector, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color.White.copy(alpha = 0.05f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = KiwiGreen,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = title,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+/**
  * The Settings Screen of the Kiwi app.
  * Provides access to support actions, privacy policy, and developer information.
  */
 @Composable
 fun SettingsScreen() {
     val context = LocalContext.current
+    var showThemeDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
     var showDeveloperDialog by remember { mutableStateOf(false) }
-    val isDialogShowing = showVersionDialog || showDeveloperDialog
+    val isDialogShowing = showThemeDialog || showVersionDialog || showDeveloperDialog
     val scrimAlpha by animateFloatAsState(
         targetValue = if (isDialogShowing) 0.6f else 0f,
         animationSpec = tween(durationMillis = 300),
         label = "scrimAlpha"
     )
+
+    // Dialog for Theme Selection
+    if (showThemeDialog) {
+        Dialog(
+            onDismissRequest = { showThemeDialog = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            ThemeSelectionDialog(onDismiss = { showThemeDialog = false })
+        }
+    }
 
     // Dialog for Version Info
     if (showVersionDialog) {
@@ -488,6 +594,31 @@ fun SettingsScreen() {
                     color = Color.White,
                     modifier = Modifier.padding(start = 8.dp, bottom = 4.dp, top = 8.dp)
                 )
+            }
+
+            // Appearance Section Group
+            item {
+                Column {
+                    SectionHeader("Appearance")
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(AshGrey)
+                    ) {
+                        appearanceItems.forEachIndexed { index, item ->
+                            SettingsItem(
+                                item = item,
+                                isLastItem = index == appearanceItems.size - 1,
+                                onClick = {
+                                    when (item.title) {
+                                        "App Theme" -> showThemeDialog = true
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
             }
 
             // Support Section Group
