@@ -13,8 +13,9 @@ val AshGrey = Color(0xFF333333) // Interactive element backgrounds and borders
 val White = Color(0xFFFFFFFF) // High-contrast text and icons
 
 // Light Theme Colors
-val LightBackground = Color(0xFFF5F6F8) // Light grey background
-val LightSurface = Color(0xFFFFFFFF) // White surface cards
-val LightSurfaceVariant = Color(0xFFE5E5E5) // Light borders and interactive elements
-val TextDark = Color(0xFF1C1C1E) // Primary text for light mode
-val TextSecondaryLight = Color(0xFF666666) // Secondary text for light mode
+val LightBackground = Color(0xFFFFFFFF) // Pure white app background for a clean look
+val LightSurface = Color(0xFFF0F3F7) // Distinct cool-tinted light grey for cards and inputs
+val LightSurfaceVariant = Color(0xFFE2E7ED) // Darker cool grey for borders and secondary buttons
+val TextDark = Color(0xFF14171A) // High contrast dark text
+val TextSecondaryLight = Color(0xFF5C6570) // Professional secondary text
+val KiwiGreenLight = Color(0xFF70CF33) // Deeper, more vibrant Kiwi green for light mode contrast

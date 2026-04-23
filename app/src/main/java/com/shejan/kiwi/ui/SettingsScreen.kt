@@ -40,6 +40,7 @@ import com.shejan.kiwi.ui.theme.AmoledBlack
 import com.shejan.kiwi.ui.theme.AshGrey
 import com.shejan.kiwi.ui.theme.DarkGrey
 import com.shejan.kiwi.ui.theme.KiwiGreen
+import com.shejan.kiwi.logic.ThemeManager
 
 /**
  * Data model for a single setting entry.
@@ -567,7 +568,7 @@ fun ThemeOptionItem(title: String, icon: ImageVector, isSelected: Boolean, onCli
 @Composable
 fun SettingsScreen() {
     val context = LocalContext.current
-    var selectedTheme by remember { mutableStateOf("Dark Mode") }
+    val selectedTheme by ThemeManager.themeFlow.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
     var showDeveloperDialog by remember { mutableStateOf(false) }
@@ -586,7 +587,7 @@ fun SettingsScreen() {
         ) {
             ThemeSelectionDialog(
                 selectedTheme = selectedTheme,
-                onThemeSelected = { selectedTheme = it },
+                onThemeSelected = { ThemeManager.setTheme(it) },
                 onDismiss = { showThemeDialog = false }
             )
         }

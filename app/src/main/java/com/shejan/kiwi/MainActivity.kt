@@ -32,6 +32,8 @@ import com.shejan.kiwi.ui.theme.KiwiGreen
 import com.shejan.kiwi.ui.theme.KiwiTheme
 
 import androidx.activity.SystemBarStyle
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.shejan.kiwi.logic.ThemeManager
 
 /**
  * Main Activity of the Kiwi app.
@@ -47,18 +49,26 @@ class MainActivity : ComponentActivity() {
         // Process any text shared from other apps
         handleIntent(intent)
         
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
-        )
+        // Initialize Theme Persistence
+        ThemeManager.init(this)
+        
+        // Automatically handles light/dark system bar icons based on system theme
+        enableEdgeToEdge()
         setContent {
-            KiwiTheme {
+            val themePreference by ThemeManager.themeFlow.collectAsState()
+            val isDarkTheme = when (themePreference) {
+                "Light Mode" -> false
+                "Dark Mode" -> true
+                else -> isSystemInDarkTheme() // "System"
+            }
+
+            KiwiTheme(darkTheme = isDarkTheme) {
                 val navController = rememberNavController()
                 val sharedText by sharedTextState
                 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = AmoledBlack,
+                    containerColor = MaterialTheme.colorScheme.background,
                     bottomBar = {
                         FloatingNavBar(navController)
                     }
@@ -136,8 +146,8 @@ fun FloatingNavBar(navController: NavController) {
                 .fillMaxWidth()
                 .height(64.dp)
                 .clip(RoundedCornerShape(22.dp))
-                .background(DarkGrey)
-                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(22.dp)),
+                .background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), RoundedCornerShape(22.dp)),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -159,7 +169,7 @@ fun FloatingNavBar(navController: NavController) {
                     Icon(
                         painter = painterResource(id = item.iconRes),
                         contentDescription = item.route,
-                        tint = if (currentRoute == item.route) KiwiGreen else Color.White,
+                        tint = if (currentRoute == item.route) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         modifier = Modifier.size(20.dp)
                     )
                 }

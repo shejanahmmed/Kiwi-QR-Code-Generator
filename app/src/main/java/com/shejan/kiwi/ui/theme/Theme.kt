@@ -26,7 +26,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = KiwiGreen,
+    primary = KiwiGreenLight,
     secondary = LightSurface,
     tertiary = LightSurfaceVariant,
     background = LightBackground,
