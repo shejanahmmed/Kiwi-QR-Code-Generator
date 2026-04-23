@@ -72,7 +72,7 @@ val aboutItems = listOf(
 fun SectionHeader(title: String) {
     Text(
         text = title.uppercase(),
-        color = KiwiGreen,
+        color = MaterialTheme.colorScheme.primary,
         fontSize = 13.sp,
         fontWeight = FontWeight.ExtraBold,
         letterSpacing = 1.sp,
@@ -111,20 +111,20 @@ fun SettingsItem(
                 modifier = Modifier
                     .size(38.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color.White.copy(alpha = 0.05f)),
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = item.icon,
                     contentDescription = item.title,
-                    tint = KiwiGreen,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = item.title,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f)
@@ -132,14 +132,14 @@ fun SettingsItem(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = Color.White.copy(alpha = 0.3f),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                 modifier = Modifier.size(20.dp)
             )
         }
         if (!isLastItem) {
             Divider(
                 modifier = Modifier.padding(start = 70.dp, end = 16.dp),
-                color = Color.White.copy(alpha = 0.05f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
                 thickness = 1.dp
             )
         }
@@ -162,8 +162,8 @@ fun VersionDialog(onDismiss: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth(0.85f)
             .clip(RoundedCornerShape(32.dp))
-            .background(DarkGrey)
-            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(32.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), RoundedCornerShape(32.dp))
     ) {
         Column(
             modifier = Modifier
@@ -176,8 +176,8 @@ fun VersionDialog(onDismiss: () -> Unit) {
                 modifier = Modifier
                     .size(90.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White.copy(alpha = 0.03f))
-                    .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp)),
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f))
+                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(24.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 androidx.compose.foundation.Image(
@@ -191,14 +191,14 @@ fun VersionDialog(onDismiss: () -> Unit) {
             
             Text(
                 text = "Kiwi QR Generator",
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.ExtraBold
             )
             
             Text(
                 text = "v1.0.0 (Stable)",
-                color = Color.White.copy(alpha = 0.5f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -207,7 +207,7 @@ fun VersionDialog(onDismiss: () -> Unit) {
             
             // Version Status Badge
             Surface(
-                color = KiwiGreen.copy(alpha = 0.15f),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Row(
@@ -217,13 +217,13 @@ fun VersionDialog(onDismiss: () -> Unit) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
-                        tint = KiwiGreen,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "LATEST VERSION",
-                        color = KiwiGreen,
+                        color = MaterialTheme.colorScheme.primary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 1.sp
@@ -232,12 +232,12 @@ fun VersionDialog(onDismiss: () -> Unit) {
             }
             
             Spacer(modifier = Modifier.height(32.dp))
-            Divider(color = Color.White.copy(alpha = 0.05f), thickness = 1.dp)
+            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), thickness = 1.dp)
             Spacer(modifier = Modifier.height(24.dp))
             
             Text(
                 text = "Build: stable-v1.0.0.1",
-                color = Color.White.copy(alpha = 0.2f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -248,12 +248,12 @@ fun VersionDialog(onDismiss: () -> Unit) {
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(12.dp)
-                .background(Color.White.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape)
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape)
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
-                tint = Color.White.copy(alpha = 0.7f),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -278,8 +278,8 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth(0.9f)
             .clip(RoundedCornerShape(32.dp))
-            .background(DarkGrey)
-            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(32.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), RoundedCornerShape(32.dp))
     ) {
         Column(
             modifier = Modifier
@@ -294,14 +294,14 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
                     .clip(androidx.compose.foundation.shape.CircleShape)
                     .background(
                         androidx.compose.ui.graphics.Brush.linearGradient(
-                            colors = listOf(KiwiGreen, Color(0xFF1B5E20))
+                            colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF1B5E20))
                         )
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "FA",
-                    color = AmoledBlack,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 36.sp,
                     fontWeight = FontWeight.Black
                 )
@@ -311,14 +311,14 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
             
             Text(
                 text = "Farjan Ahmmed",
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold
             )
             
             Text(
                 text = "(Shejan)",
-                color = Color.White.copy(alpha = 0.5f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -327,12 +327,12 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
             
             // Developer Role Badge
             Surface(
-                color = KiwiGreen.copy(alpha = 0.15f),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
                     text = "APP DEVELOPER",
-                    color = KiwiGreen,
+                    color = MaterialTheme.colorScheme.primary,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Black,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -344,7 +344,7 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
             
             Text(
                 text = "Connect with me",
-                color = Color.White.copy(alpha = 0.3f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.5.sp
@@ -398,12 +398,12 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(12.dp)
-                .background(Color.White.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape)
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape)
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
-                tint = Color.White.copy(alpha = 0.7f),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -423,7 +423,7 @@ fun SocialLink(iconRes: Int, onClick: () -> Unit) {
         modifier = Modifier
             .size(48.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(AshGrey)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
@@ -433,7 +433,7 @@ fun SocialLink(iconRes: Int, onClick: () -> Unit) {
         Icon(
             painter = androidx.compose.ui.res.painterResource(id = iconRes),
             contentDescription = null,
-            tint = Color.White,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(24.dp)
         )
     }
@@ -461,8 +461,8 @@ fun ThemeSelectionDialog(
         modifier = Modifier
             .fillMaxWidth(0.85f)
             .clip(RoundedCornerShape(32.dp))
-            .background(DarkGrey)
-            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(32.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), RoundedCornerShape(32.dp))
     ) {
         Column(
             modifier = Modifier
@@ -472,7 +472,7 @@ fun ThemeSelectionDialog(
         ) {
             Text(
                 text = "Select Theme",
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold
             )
@@ -505,12 +505,12 @@ fun ThemeSelectionDialog(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(12.dp)
-                .background(Color.White.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape)
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape)
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
-                tint = Color.White.copy(alpha = 0.7f),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -531,20 +531,20 @@ fun ThemeOptionItem(title: String, icon: ImageVector, isSelected: Boolean, onCli
             modifier = Modifier
                 .size(38.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color.White.copy(alpha = 0.05f)),
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = KiwiGreen,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = title,
-            color = if (isSelected) KiwiGreen else Color.White,
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.weight(1f)
@@ -553,7 +553,7 @@ fun ThemeOptionItem(title: String, icon: ImageVector, isSelected: Boolean, onCli
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = "Selected",
-                tint = KiwiGreen,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -612,7 +612,7 @@ fun SettingsScreen() {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -626,7 +626,7 @@ fun SettingsScreen() {
                     text = "Settings",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(start = 8.dp, bottom = 4.dp, top = 8.dp)
                 )
             }
@@ -639,7 +639,7 @@ fun SettingsScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .background(AshGrey)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         appearanceItems.forEachIndexed { index, item ->
                             SettingsItem(
@@ -664,7 +664,7 @@ fun SettingsScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .background(AshGrey)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         supportItems.forEachIndexed { index, item ->
                             SettingsItem(
@@ -709,7 +709,7 @@ fun SettingsScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .background(AshGrey)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         aboutItems.forEachIndexed { index, item ->
                             SettingsItem(
@@ -734,12 +734,12 @@ fun SettingsScreen() {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             "Kiwi QR Generator",
-                            color = Color.White.copy(alpha = 0.5f),
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                             fontSize = 14.sp
                         )
                         Text(
                             "Version 1.0.0",
-                            color = Color.White.copy(alpha = 0.3f),
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
                             fontSize = 12.sp
                         )
                     }

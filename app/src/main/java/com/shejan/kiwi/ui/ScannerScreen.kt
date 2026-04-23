@@ -72,7 +72,7 @@ fun ScannerScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AmoledBlack)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         if (hasCameraPermission) {
             CameraScanner(
@@ -113,29 +113,29 @@ private fun PermissionDeniedPlaceholder(onGrantClick: () -> Unit) {
         Icon(
             imageVector = Icons.Default.QrCodeScanner,
             contentDescription = null,
-            tint = KiwiGreen,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(64.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Camera Permission Required",
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "We need camera access to scan QR codes.",
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = onGrantClick,
-            colors = ButtonDefaults.buttonColors(containerColor = KiwiGreen),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Grant Permission", color = AmoledBlack)
+            Text("Grant Permission", color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }
@@ -300,10 +300,11 @@ fun ScannerOverlay(isFlashOn: Boolean, onFlashToggle: () -> Unit, onGalleryClick
                     .size(260.dp)
                     .background(Color.Transparent)
             ) {
+                val primaryColor = MaterialTheme.colorScheme.primary
                 androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
                     val strokeWidth = 4.dp.toPx()
                     val cornerLength = 40.dp.toPx()
-                    val color = KiwiGreen
+                    val color = primaryColor
                     
                     // Draw corner markers
                     // Top Left
@@ -326,13 +327,13 @@ fun ScannerOverlay(isFlashOn: Boolean, onFlashToggle: () -> Unit, onGalleryClick
             
             Spacer(modifier = Modifier.height(32.dp))
             Surface(
-                color = DarkGrey.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.padding(horizontal = 24.dp)
             ) {
                 Text(
                     text = "Align QR code inside the frame",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(vertical = 12.dp, horizontal = 24.dp),
                     fontSize = 14.sp
                 )
@@ -345,12 +346,12 @@ fun ScannerOverlay(isFlashOn: Boolean, onFlashToggle: () -> Unit, onGalleryClick
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 48.dp, end = 24.dp)
-                .background(DarkGrey.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
         ) {
             Icon(
                 imageVector = if (isFlashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
                 contentDescription = "Toggle Flash",
-                tint = if (isFlashOn) KiwiGreen else Color.White
+                tint = if (isFlashOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
             )
         }
         
@@ -360,12 +361,12 @@ fun ScannerOverlay(isFlashOn: Boolean, onFlashToggle: () -> Unit, onGalleryClick
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(top = 48.dp, start = 24.dp)
-                .background(DarkGrey.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
         ) {
             Icon(
                 imageVector = Icons.Default.Image,
                 contentDescription = "Pick Image from Gallery",
-                tint = Color.White
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
     }

@@ -105,7 +105,7 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AmoledBlack)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 24.dp)
             .padding(top = 48.dp, bottom = 12.dp),
         horizontalAlignment = Alignment.Start
@@ -115,13 +115,13 @@ fun HomeScreen(
             text = "Create Your",
             fontSize = 36.sp,
             fontWeight = FontWeight.Light,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onBackground
         )
         Text(
             text = "QR Code",
             fontSize = 36.sp,
             fontWeight = FontWeight.ExtraBold,
-            color = KiwiGreen
+            color = MaterialTheme.colorScheme.primary
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -136,10 +136,10 @@ fun HomeScreen(
                 modifier = Modifier
                     .size(280.dp)
                     .clip(RoundedCornerShape(32.dp))
-                    .background(DarkGrey)
+                    .background(MaterialTheme.colorScheme.surface)
                     .border(
                         width = if (qrBitmap != null) 2.dp else 0.dp,
-                        color = if (qrBitmap != null) KiwiGreen.copy(alpha = 0.5f) else Color.Transparent,
+                        color = if (qrBitmap != null) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else Color.Transparent,
                         shape = RoundedCornerShape(32.dp)
                     )
                     .padding(16.dp),
@@ -156,13 +156,13 @@ fun HomeScreen(
                             Icon(
                                 imageVector = Icons.Default.QrCodeScanner,
                                 contentDescription = null,
-                                tint = Color.Gray.copy(alpha = 0.3f),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                                 modifier = Modifier.size(80.dp)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = "Awaiting input...",
-                                color = Color.Gray.copy(alpha = 0.5f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -190,7 +190,7 @@ fun HomeScreen(
             value = textInput,
             onValueChange = { textInput = it },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Enter link or text...", color = Color.Gray) },
+            placeholder = { Text("Enter link or text...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
             trailingIcon = {
                 if (textInput.isEmpty()) {
                     IconButton(onClick = {
@@ -206,7 +206,7 @@ fun HomeScreen(
                         Icon(
                             imageVector = Icons.Default.ContentPaste,
                             contentDescription = "Paste",
-                            tint = KiwiGreen
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 } else {
@@ -214,7 +214,7 @@ fun HomeScreen(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Clear",
-                            tint = Color.Gray
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                     }
                 }
@@ -222,13 +222,13 @@ fun HomeScreen(
             singleLine = true,
             shape = RoundedCornerShape(20.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = KiwiGreen,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = Color.Transparent,
-                focusedContainerColor = DarkGrey,
-                unfocusedContainerColor = DarkGrey,
-                cursorColor = KiwiGreen,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                cursorColor = MaterialTheme.colorScheme.primary,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -305,10 +305,10 @@ fun ActionButton(
         enabled = enabled,
         modifier = modifier.height(56.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isPrimary) KiwiGreen else AshGrey,
-            contentColor = if (isPrimary) AmoledBlack else Color.White,
-            disabledContainerColor = DarkGrey.copy(alpha = 0.5f),
-            disabledContentColor = Color.Gray
+            containerColor = if (isPrimary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
+            contentColor = if (isPrimary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+            disabledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
         ),
         shape = RoundedCornerShape(16.dp),
         elevation = if (isPrimary) ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 2.dp) else null

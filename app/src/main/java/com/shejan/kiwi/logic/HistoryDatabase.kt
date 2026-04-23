@@ -10,7 +10,7 @@ import androidx.room.migration.Migration
  * Adds the 'type' column to the 'history_items' table to distinguish between 
  * generated and scanned QR codes.
  */
-val MIGRATION_1_2 = object : Migration(1, 2) {
+val MIGRATION_1_2 = object :  Migration(1, 2) {
     override fun migrate(database: SupportSQLiteDatabase) {
         database.execSQL("ALTER TABLE history_items ADD COLUMN type TEXT NOT NULL DEFAULT 'generated'")
     }
