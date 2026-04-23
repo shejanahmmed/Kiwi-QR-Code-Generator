@@ -442,10 +442,16 @@ fun SocialLink(iconRes: Int, onClick: () -> Unit) {
 /**
  * Dialog displaying theme selection options.
  *
+ * @param selectedTheme The currently selected theme name.
+ * @param onThemeSelected Callback when a new theme is selected.
  * @param onDismiss Callback when the dialog is closed.
  */
 @Composable
-fun ThemeSelectionDialog(onDismiss: () -> Unit) {
+fun ThemeSelectionDialog(
+    selectedTheme: String,
+    onThemeSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
     val view = LocalView.current
     SideEffect {
         (view.parent as? DialogWindowProvider)?.window
@@ -474,9 +480,24 @@ fun ThemeSelectionDialog(onDismiss: () -> Unit) {
             Spacer(modifier = Modifier.height(24.dp))
             
             // Options
-            ThemeOptionItem(title = "System Default", icon = Icons.Default.Settings, onClick = { onDismiss() })
-            ThemeOptionItem(title = "Light Mode", icon = Icons.Default.WbSunny, onClick = { onDismiss() })
-            ThemeOptionItem(title = "Dark Mode", icon = Icons.Default.NightlightRound, onClick = { onDismiss() })
+            ThemeOptionItem(
+                title = "System Default", 
+                icon = Icons.Default.Settings, 
+                isSelected = selectedTheme == "System Default",
+                onClick = { onThemeSelected("System Default"); onDismiss() }
+            )
+            ThemeOptionItem(
+                title = "Light Mode", 
+                icon = Icons.Default.WbSunny, 
+                isSelected = selectedTheme == "Light Mode",
+                onClick = { onThemeSelected("Light Mode"); onDismiss() }
+            )
+            ThemeOptionItem(
+                title = "Dark Mode", 
+                icon = Icons.Default.NightlightRound, 
+                isSelected = selectedTheme == "Dark Mode",
+                onClick = { onThemeSelected("Dark Mode"); onDismiss() }
+            )
         }
 
         IconButton(
@@ -497,7 +518,7 @@ fun ThemeSelectionDialog(onDismiss: () -> Unit) {
 }
 
 @Composable
-fun ThemeOptionItem(title: String, icon: ImageVector, onClick: () -> Unit) {
+fun ThemeOptionItem(title: String, icon: ImageVector, isSelected: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -523,10 +544,19 @@ fun ThemeOptionItem(title: String, icon: ImageVector, onClick: () -> Unit) {
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = title,
-            color = Color.White,
+            color = if (isSelected) KiwiGreen else Color.White,
             fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f)
         )
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Selected",
+                tint = KiwiGreen,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
 
@@ -537,6 +567,7 @@ fun ThemeOptionItem(title: String, icon: ImageVector, onClick: () -> Unit) {
 @Composable
 fun SettingsScreen() {
     val context = LocalContext.current
+    var selectedTheme by remember { mutableStateOf("Dark Mode") }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
     var showDeveloperDialog by remember { mutableStateOf(false) }
@@ -553,7 +584,11 @@ fun SettingsScreen() {
             onDismissRequest = { showThemeDialog = false },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            ThemeSelectionDialog(onDismiss = { showThemeDialog = false })
+            ThemeSelectionDialog(
+                selectedTheme = selectedTheme,
+                onThemeSelected = { selectedTheme = it },
+                onDismiss = { showThemeDialog = false }
+            )
         }
     }
 
