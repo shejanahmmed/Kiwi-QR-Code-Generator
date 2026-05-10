@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
 import com.shejan.kiwi.R
 import com.shejan.kiwi.ui.theme.AmoledBlack
 import com.shejan.kiwi.ui.theme.AshGrey
@@ -156,8 +157,14 @@ fun SettingsItem(
 fun VersionDialog(onDismiss: () -> Unit) {
     val view = LocalView.current
     SideEffect {
-        (view.parent as? DialogWindowProvider)?.window
-            ?.setBackgroundDrawableResource(android.R.color.transparent)
+        val window = (view.parent as? DialogWindowProvider)?.window
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent)
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+            window.setDimAmount(0.6f)
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+        }
     }
     Box(
         modifier = Modifier
@@ -271,8 +278,14 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val view = LocalView.current
     SideEffect {
-        (view.parent as? DialogWindowProvider)?.window
-            ?.setBackgroundDrawableResource(android.R.color.transparent)
+        val window = (view.parent as? DialogWindowProvider)?.window
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent)
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+            window.setDimAmount(0.6f)
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+        }
     }
     
     Box(
@@ -455,8 +468,14 @@ fun ThemeSelectionDialog(
 ) {
     val view = LocalView.current
     SideEffect {
-        (view.parent as? DialogWindowProvider)?.window
-            ?.setBackgroundDrawableResource(android.R.color.transparent)
+        val window = (view.parent as? DialogWindowProvider)?.window
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent)
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+            window.setDimAmount(0.6f)
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+        }
     }
     Box(
         modifier = Modifier
@@ -572,12 +591,6 @@ fun SettingsScreen() {
     var showThemeDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
     var showDeveloperDialog by remember { mutableStateOf(false) }
-    val isDialogShowing = showThemeDialog || showVersionDialog || showDeveloperDialog
-    val scrimAlpha by animateFloatAsState(
-        targetValue = if (isDialogShowing) 0.6f else 0f,
-        animationSpec = tween(durationMillis = 300),
-        label = "scrimAlpha"
-    )
 
     // Dialog for Theme Selection
     if (showThemeDialog) {
@@ -746,15 +759,6 @@ fun SettingsScreen() {
                     }
                 }
             }
-        }
-
-        // Dark scrim overlay for dialog focus
-        if (scrimAlpha > 0f) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = scrimAlpha))
-            )
         }
     }
 }

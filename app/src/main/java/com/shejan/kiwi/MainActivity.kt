@@ -52,8 +52,6 @@ class MainActivity : ComponentActivity() {
         // Initialize Theme Persistence
         ThemeManager.init(this)
         
-        // Automatically handles light/dark system bar icons based on system theme
-        enableEdgeToEdge()
         setContent {
             val themePreference by ThemeManager.themeFlow.collectAsState()
             val isDarkTheme = when (themePreference) {
@@ -61,6 +59,14 @@ class MainActivity : ComponentActivity() {
                 "Dark Mode" -> true
                 else -> isSystemInDarkTheme() // "System"
             }
+
+            // Re-apply edge-to-edge on every theme change so icon contrast is correct
+            val statusBarStyle = if (isDarkTheme) {
+                SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+            } else {
+                SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+            }
+            enableEdgeToEdge(statusBarStyle = statusBarStyle, navigationBarStyle = statusBarStyle)
 
             KiwiTheme(darkTheme = isDarkTheme) {
                 val navController = rememberNavController()
