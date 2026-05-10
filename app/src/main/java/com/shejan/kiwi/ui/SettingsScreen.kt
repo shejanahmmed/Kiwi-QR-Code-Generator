@@ -179,21 +179,14 @@ fun VersionDialog(onDismiss: () -> Unit) {
                 .padding(top = 40.dp, bottom = 32.dp, start = 24.dp, end = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // App Icon Container
-            Box(
+            // App Logo
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(id = R.mipmap.ic_launcher_foreground),
+                contentDescription = null,
                 modifier = Modifier
                     .size(90.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f))
-                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(24.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                androidx.compose.foundation.Image(
-                    painter = androidx.compose.ui.res.painterResource(id = R.mipmap.ic_launcher_foreground),
-                    contentDescription = null,
-                    modifier = Modifier.size(70.dp)
-                )
-            }
+                    .clip(RoundedCornerShape(8.dp))
+            )
             
             Spacer(modifier = Modifier.height(24.dp))
             
