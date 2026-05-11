@@ -570,7 +570,7 @@ private fun HistoryDetailsDialog(
                         iconRes = com.shejan.kiwi.R.drawable.ic_edit_action,
                         onClick = onRenameRequest,
                         containerColor = MaterialTheme.colorScheme.tertiary,
-                        iconTint = MaterialTheme.colorScheme.onTertiary
+                        iconTint = MaterialTheme.colorScheme.onSurface
                     )
 
                     if (item.url.startsWith("http://") || item.url.startsWith("https://")) {
