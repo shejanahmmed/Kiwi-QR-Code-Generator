@@ -44,6 +44,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.shejan.kiwi.logic.HistoryItem
 import com.shejan.kiwi.logic.QrGenerator
 import com.shejan.kiwi.ui.theme.AmoledBlack
@@ -430,132 +432,152 @@ private fun HistoryDetailsDialog(
         }
     }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-        shape = RoundedCornerShape(32.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        title = null,
-        text = {
-            Column(
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Upper Part
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surface
             ) {
-                // Top close action & Title space
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Box(modifier = Modifier.size(36.dp)) // Spacer to keep title centered
-                    Text(
-                        text = "Scan Details",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(top = 6.dp)
-                    )
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.tertiary, CircleShape)
+                    // Top close action & Title space
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = MaterialTheme.colorScheme.onTertiary,
-                            modifier = Modifier.size(20.dp)
+                        Box(modifier = Modifier.size(36.dp)) // Spacer to keep title centered
+                        Text(
+                            text = "Scan Details",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(top = 6.dp)
                         )
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.tertiary, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = MaterialTheme.colorScheme.onTertiary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
-                }
-                
-                Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                qrBitmap?.let { bit ->
-                    Surface(
-                        modifier = Modifier.size(220.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        color = Color.White,
-                        shadowElevation = 8.dp
-                    ) {
-                        Image(
-                            bitmap = bit.asImageBitmap(),
-                            contentDescription = "QR Code",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
-                                .clickable {
-                                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-                                        val hasPermission = ContextCompat.checkSelfPermission(
-                                            context,
-                                            Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                        ) == PackageManager.PERMISSION_GRANTED
-                                        
-                                        if (hasPermission) {
-                                            saveQrToGallery()
+                    qrBitmap?.let { bit ->
+                        Surface(
+                            modifier = Modifier.size(220.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            color = Color.White,
+                            shadowElevation = 8.dp
+                        ) {
+                            Image(
+                                bitmap = bit.asImageBitmap(),
+                                contentDescription = "QR Code",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp)
+                                    .clickable {
+                                        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                                            val hasPermission = ContextCompat.checkSelfPermission(
+                                                context,
+                                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                            ) == PackageManager.PERMISSION_GRANTED
+                                            
+                                            if (hasPermission) {
+                                                saveQrToGallery()
+                                            } else {
+                                                permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                            }
                                         } else {
-                                            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                            saveQrToGallery()
                                         }
-                                    } else {
-                                        saveQrToGallery()
                                     }
-                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Display Custom Name (Label) if it exists
+                    if (!item.label.isNullOrEmpty()) {
+                        Text(
+                            text = item.label,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    // Always display the actual Link Content
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    ) {
+                        Text(
+                            text = item.url,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+                    ) {
+                        Text(
+                            text = dateFormatter.format(Date(item.timestamp)),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 13.sp
+                        )
+                        Text(text = "•", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 13.sp)
+                        Text(
+                            text = timeFormatter.format(Date(item.timestamp)),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 13.sp
                         )
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Display Custom Name (Label) if it exists
-                if (!item.label.isNullOrEmpty()) {
-                    Text(
-                        text = item.label,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                // Always display the actual Link Content
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                ) {
-                    Text(
-                        text = item.url,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
+            // Down Part
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surface
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
-                ) {
-                    Text(
-                        text = dateFormatter.format(Date(item.timestamp)),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        fontSize = 13.sp
-                    )
-                    Text(text = "•", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 13.sp)
-                    Text(
-                        text = timeFormatter.format(Date(item.timestamp)),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        fontSize = 13.sp
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(28.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
                     horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -586,10 +608,8 @@ private fun HistoryDetailsDialog(
                     }
                 }
             }
-        },
-        confirmButton = {},
-        dismissButton = {}
-    )
+        }
+    }
 }
 
 /**
