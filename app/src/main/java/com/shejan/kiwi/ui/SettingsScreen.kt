@@ -294,25 +294,15 @@ fun DeveloperProfileCard(onDismiss: () -> Unit) {
                 .padding(top = 40.dp, bottom = 32.dp, start = 24.dp, end = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Developer Initials with Gradient
-            Box(
+            // Developer Profile Image
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(id = R.drawable.dev_profile),
+                contentDescription = "Developer Profile",
                 modifier = Modifier
                     .size(100.dp)
-                    .clip(androidx.compose.foundation.shape.CircleShape)
-                    .background(
-                        androidx.compose.ui.graphics.Brush.linearGradient(
-                            colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF1B5E20))
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "FA",
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Black
-                )
-            }
+                    .clip(androidx.compose.foundation.shape.CircleShape),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
             
